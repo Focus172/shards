@@ -32,12 +32,19 @@ So much better right?
 The code uses a trimmed version of rustc to compile your code to an AST (abstract syntax tree).
 The AST is then passed to an interpreter which runs it. When you call a meathod the interpreter
 checks for this (in order):
-    1. is it a builtin meathod
-    2. is it a part of coreutils package (optional dependency)
-    3. is it there an .rlib in your rpath with that name
-    4. is it in your PATH 
-    5. interpreting as string (in some contexts)
-    6. error
+    - 1. is it a builtin meathod
+    - 2. is it a part of coreutils package (optional dependency)
+    - 3. is it there an .rlib in your rpath with that name
+    - 4. is it in your PATH 
+    - 5. interpreting as string (in some contexts)
+    - 6. error
+
+# Piping
+
+When chaining operation is chained it will default to using a rust iterator over a pipe if it is 
+supported. If not then it will fall back on a traditional unix pipe. Iterators provide args as 
+they recive them and all process run in parelell. A long time in the fueture there is a goal to 
+run code until it request the next unready arg.
 
 
 ## Goals

@@ -3,7 +3,12 @@ mod config;
 mod env;
 mod interpreter;
 
-use crate::{ast::Ast, config::ConfigPaths, env::EnvState, interpreter::Interpreter};
+use crate::{
+    ast::Ast,
+    config::ConfigPaths,
+    env::{UserState, SystemState},
+    interpreter::Interpreter,
+};
 use anyhow::Result;
 use clap::Parser;
 use std::{fs::File, path::PathBuf};
@@ -18,7 +23,7 @@ use std::{fs::File, path::PathBuf};
     long_about = None,
 )]
 pub struct RushiArgs {
-    /// Enables debug mode 
+    /// Enables debug mode
     #[arg(short = 'd', long, default_value_t = false)]
     debug: bool,
 
@@ -58,7 +63,6 @@ pub struct RushiArgs {
     /// Whether to enable private mode.
     #[arg(short = 'P', long = "private", default_value_t = false)]
     private_mode: bool,
-
     // /// Profile to login as
     // #[arg(short = 'p', long, value_name = "PROFILE")]
     // profile: Option<Profile>,
@@ -66,6 +70,24 @@ pub struct RushiArgs {
     // /// Unstable features to enable
     // #[arg(short = 'f', long, value_name = "FEATURES")]
     // features: Option<Vec<Feature>>,
+}
+
+impl RushiArgs {
+    fn imply_args(&mut self) {
+        // if the first argument starts with a dash, we are a login shell
+        // TODO: ask clap project to provide this in some way
+        if std::env::args().take(1).any(|arg| arg.starts_with('-')) {
+            self.is_login = true;
+        }
+
+        // We are an interactive session if we have not been given an explicit
+        // command or file to execute and stdin is a tty. Note that the -i or
+        // --interactive options also force interactive mode.
+        if self.batch_cmds.is_none() {
+            // && is a tty
+            self.is_interactive_session = true;
+        }
+    }
 }
 
 fn main() -> ! {
@@ -80,6 +102,7 @@ fn main() -> ! {
 
 fn rushi() -> Result<()> {
     let mut args = RushiArgs::parse();
+    args.imply_args();
 
     if args.debug {
         simplelog::WriteLogger::init(
@@ -94,43 +117,31 @@ fn rushi() -> Result<()> {
         log::info!("Debug mode enabled");
     }
 
-    // if the first argument starts with a dash, we are a login shell
-    // TODO: as clap project to provide this in some way
-    if std::env::args().take(1).any(|arg| arg.starts_with('-')) {
-        args.is_login = true;
-    }
-
-    // We are an interactive session if we have not been given an explicit
-    // command or file to execute and stdin is a tty. Note that the -i or
-    // --interactive options also force interactive mode.
-    if args.batch_cmds.is_none() {
-        // && is a tty
-        args.is_interactive_session = true;
-    }
-
     // signal_unblock_all();
 
     // setlocale(LC_ALL, "");
 
-    let mut env = EnvState::default();
+    let mut env = UserState::new(&args);
 
     // source user and system config
     let mut paths = ConfigPaths::new(&args);
     paths.source(&mut env);
 
-    let mut rl = rustyline::DefaultEditor::new()?;
+    let mut sys = SystemState::new(&env);
 
+
+    let mut rl = reedline::Editor::default();
     println!("Welcome to Rushi!");
     println!("Type 'exit' to exit.");
 
     let interpreter = Interpreter::new();
 
     'running: loop {
-        let line = rl.readline(env.prompt.as_ref()).unwrap_or_default();
+        let line = rl.get_buffer();
 
         // let res = Ast::parse(&line).map(|mut a| interpreter.eval(&mut a, &mut env));
-        let mut ast =Ast::parse(&line).unwrap();
-        let res = interpreter.eval(&mut ast, &mut env);
+        let mut ast = Ast::parse(&line, &sys).unwrap();
+        let res = interpreter.eval(&mut ast, &mut env, &mut sys);
 
         match res {
             Ok(_) => {}
@@ -140,8 +151,6 @@ fn rushi() -> Result<()> {
             }
         }
     }
-
-    rl.save_history("history.txt")?;
 
     // restore_term_mode();
     // restore_term_foreground_process_group_for_exit();

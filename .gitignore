@@ -1,15 +1,12 @@
-/target
+# Rust things
+*target/
 
 # some things I am using as references/deps
-fish-c
-fish-rs
-coreutils/
-compiler
+/fish
+/coreutils
+/reedline
+/rustc
 
 # fish code to be adated
-src/builtins
-src/env/var.rs
-src/env/environment.rs
-src/env/env_universal_common.cpp
-src/env/env_dispatch.cpp
-src/env/env.cpp
+stardust/src/builtins
+stardust/src/env

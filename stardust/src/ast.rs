@@ -1,13 +1,14 @@
 //! A todo list item until a get a working api for the rustc Ast
 
 use std::collections::VecDeque;
+use crate::env::SystemState;
 
 pub struct Ast<'a> {
     args: VecDeque<&'a str>,
 }
 
 impl<'a> Ast<'a> {
-    pub fn parse(s: &'a str) -> anyhow::Result<Ast<'a>> {
+    pub fn parse(s: &'a str, sys: &SystemState) -> anyhow::Result<Ast<'a>> {
         Ok(Ast {
             args: s.split_whitespace().collect::<VecDeque<&str>>(),
         })

@@ -2,9 +2,9 @@
 Version=0.1.0
 Type=Application
 Terminal=true
-Exec=rushi
-Name=rushi
-Comment=A shell to oxidize your terminal
-Icon=rushi
+Exec=stardust
+Name=stardust
+Comment=A shell sent from mars
+Icon=stardust
 # "Shell" would be the proper category, but it's reserved so we can't use it.
 Categories=ConsoleOnly;System;
