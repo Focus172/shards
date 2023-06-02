@@ -47,7 +47,7 @@ impl ConfigPaths {
 
     /// Source the file config.rsi in the given directory.
     /// If the config.fish file doesn't exist or isn't readable silently return.
-    fn source_config_in_directory(path: &mut PathBuf, env: &mut UserState) {
+    fn source_config_in_directory(path: &mut PathBuf, _env: &mut UserState) {
         // We need to get the configuration directory before we can source the user configuration file.
         // If path_get_config returns false then we have no configuration directory and no custom config
         // to load.
@@ -62,7 +62,7 @@ impl ConfigPaths {
         path.push("config.rsi");
         let name = path.display().to_string();
 
-        let f = match File::open(path) {
+        let _f = match File::open(path) {
             Ok(f) => f,
             Err(e) => {
                 log::warn!(

@@ -10,7 +10,7 @@ use tokio::{
     process::{ChildStderr, ChildStdin, ChildStdout},
     sync::{
         mpsc::{unbounded_channel, Sender, UnboundedReceiver, UnboundedSender},
-        Mutex, Notify,
+        Mutex,
     },
 };
 
@@ -52,11 +52,9 @@ impl Transport {
     ) -> (
         UnboundedReceiver<(usize, jsonrpc::Call)>,
         UnboundedSender<Payload>,
-        Arc<Notify>,
     ) {
         let (client_tx, rx) = unbounded_channel();
         let (tx, client_rx) = unbounded_channel();
-        let notify = Arc::new(Notify::new());
 
         let transport = Self {
             id,
@@ -71,16 +69,16 @@ impl Transport {
             server_stdout,
             client_tx.clone(),
         ));
+
         tokio::spawn(Self::err(transport.clone(), server_stderr));
         tokio::spawn(Self::send(
             transport,
             server_stdin,
             client_tx,
             client_rx,
-            notify.clone(),
         ));
 
-        (rx, tx, notify)
+        (rx, tx)
     }
 
     async fn recv_server_message(
@@ -328,7 +326,6 @@ impl Transport {
         mut server_stdin: BufWriter<ChildStdin>,
         client_tx: UnboundedSender<(usize, jsonrpc::Call)>,
         mut client_rx: UnboundedReceiver<Payload>,
-        initialize_notify: Arc<Notify>,
     ) {
         let mut pending_messages: Vec<Payload> = Vec::new();
         let mut is_pending = true;

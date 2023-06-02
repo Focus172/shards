@@ -7,7 +7,7 @@ impl Interpreter {
         Interpreter {}
     }
 
-    pub fn eval(&self, ast: &mut Ast, env: &mut UserState, sys: &mut SystemState) -> anyhow::Result<()> {
+    pub fn eval(&self, ast: &mut Ast, _env: &mut UserState, _sys: &mut SystemState) -> anyhow::Result<()> {
 
         match ast.next().unwrap() {
             "exit" => return Err(anyhow::anyhow!("exit")),

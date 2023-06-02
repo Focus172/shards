@@ -130,7 +130,7 @@ fn rushi() -> Result<()> {
     let mut sys = SystemState::new(&env);
 
 
-    let mut rl = reedline::Editor::default();
+    let rl = reedline::Editor::default();
     println!("Welcome to Rushi!");
     println!("Type 'exit' to exit.");
 

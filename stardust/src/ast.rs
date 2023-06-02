@@ -8,7 +8,7 @@ pub struct Ast<'a> {
 }
 
 impl<'a> Ast<'a> {
-    pub fn parse(s: &'a str, sys: &SystemState) -> anyhow::Result<Ast<'a>> {
+    pub fn parse(s: &'a str, _sys: &SystemState) -> anyhow::Result<Ast<'a>> {
         Ok(Ast {
             args: s.split_whitespace().collect::<VecDeque<&str>>(),
         })

@@ -4,8 +4,6 @@
 # some things I am using as references/deps
 /fish
 /coreutils
-/reedline
-/rustc
 
 # fish code to be adated
 stardust/src/builtins

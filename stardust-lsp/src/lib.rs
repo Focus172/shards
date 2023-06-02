@@ -1,8 +1,8 @@
 pub mod client;
-mod transport;
-mod util;
+pub mod transport;
+// mod util;
 mod jsonrpc;
-mod snippet;
+// mod snippet;
 
 pub use client::Client;
 pub use futures_executor::block_on;
@@ -23,7 +23,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 pub type Result<T> = core::result::Result<T, Error>;
 pub type LanguageServerName = String;
 
-#[derive(Error, Debug)]
+#[derive(Error(), Debug)]
 pub enum Error {
     #[error("protocol error: {0}")]
     Rpc(#[from] jsonrpc::Error),
@@ -52,3 +52,26 @@ pub enum OffsetEncoding {
     Utf16,
 }
 
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "kebab-case")]
+pub enum LanguageServerFeature {
+    Format,
+    GotoDeclaration,
+    GotoDefinition,
+    GotoTypeDefinition,
+    GotoReference,
+    GotoImplementation,
+    // Goto, use bitflags, combining previous Goto members?
+    SignatureHelp,
+    Hover,
+    DocumentHighlight,
+    Completion,
+    CodeAction,
+    WorkspaceCommand,
+    DocumentSymbols,
+    WorkspaceSymbols,
+    // Symbols, use bitflags, see above?
+    Diagnostics,
+    RenameSymbol,
+    InlayHints,
+}

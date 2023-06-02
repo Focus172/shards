@@ -1,13 +1,14 @@
 use crate::{
     jsonrpc,
     transport::{Payload, Transport},
-    Call, Error, OffsetEncoding, Result,
-};
-use lsp::{
-    OneOf,
-    PositionEncodingKind,
+    Call, Error, OffsetEncoding, Result, LanguageServerFeature,
 };
 use lsp_types as lsp;
+use lsp::{
+    OneOf,
+    PositionEncodingKind, WorkspaceFolder, notification::DidChangeWorkspaceFolders, DidChangeWorkspaceFoldersParams, WorkspaceFoldersChangeEvent, Url,
+    ResourceOp::*
+};
 use parking_lot::Mutex;
 use serde::Deserialize;
 use serde_json::Value;
@@ -23,7 +24,7 @@ use tokio::{
     process::{Child, Command},
     sync::{
         mpsc::{channel, UnboundedReceiver, UnboundedSender},
-        Notify, OnceCell,
+        OnceCell,
     },
 };
 
@@ -37,92 +38,14 @@ pub struct Client {
     capabilities: OnceCell<lsp::ServerCapabilities>,
     config: Option<serde_json::Value>,
     req_timeout: u64,
+    root_uri: Option<Url>,
+    root_path: PathBuf,
+    workspace_folders: Vec<lsp::WorkspaceFolder>,
 }
 
 impl Client {
-    // pub fn try_add_doc(
-    //     self: &Arc<Self>,
-    //     root_markers: &[String],
-    //     manual_roots: &[PathBuf],
-    //     doc_path: Option<&std::path::PathBuf>,
-    //     may_support_workspace: bool,
-    // ) -> bool {
-    //     let (workspace, workspace_is_cwd) = find_workspace();
-    //     let workspace = path::get_normalized_path(&workspace);
-    //     let root = find_lsp_workspace(
-    //         doc_path
-    //             .and_then(|x| x.parent().and_then(|x| x.to_str()))
-    //             .unwrap_or("."),
-    //         root_markers,
-    //         manual_roots,
-    //         &workspace,
-    //         workspace_is_cwd,
-    //     );
-    //     let root_uri = root
-    //         .as_ref()
-    //         .and_then(|root| lsp::Url::from_file_path(root).ok());
-    //
-    //     if self.root_path == root.unwrap_or(workspace)
-    //         || root_uri.as_ref().map_or(false, |root_uri| {
-    //             self.workspace_folders
-    //                 .lock()
-    //                 .iter()
-    //                 .any(|workspace| &workspace.uri == root_uri)
-    //         })
-    //     {
-    //         // workspace URI is already registered so we can use this client
-    //         return true;
-    //     }
-    //
-    //     // this server definitely doesn't support multiple workspace, no need to check capabilities
-    //     if !may_support_workspace {
-    //         return false;
-    //     }
-    //
-    //     let Some(capabilities) = self.capabilities.get() else {
-    //         let client = Arc::clone(self);
-    //         // initialization hasn't finished yet, deal with this new root later
-    //         // TODO: In the edgecase that a **new root** is added
-    //         // for an LSP that **doesn't support workspace_folders** before initaliation is finished
-    //         // the new roots are ignored.
-    //         // That particular edgecase would require retroactively spawning new LSP
-    //         // clients and therefore also require us to retroactively update the corresponding
-    //         // documents LSP client handle. It's doable but a pretty weird edgecase so let's
-    //         // wait and see if anyone ever runs into it.
-    //         tokio::spawn(async move {
-    //             client.initialize_notify.notified().await;
-    //             if let Some(workspace_folders_caps) = client
-    //                 .capabilities()
-    //                 .workspace
-    //                 .as_ref()
-    //                 .and_then(|cap| cap.workspace_folders.as_ref())
-    //                 .filter(|cap| cap.supported.unwrap_or(false))
-    //             {
-    //                 client.add_workspace_folder(
-    //                     root_uri,
-    //                     &workspace_folders_caps.change_notifications,
-    //                 );
-    //             }
-    //         });
-    //         return true;
-    //     };
-    //
-    //     if let Some(workspace_folders_caps) = capabilities
-    //         .workspace
-    //         .as_ref()
-    //         .and_then(|cap| cap.workspace_folders.as_ref())
-    //         .filter(|cap| cap.supported.unwrap_or(false))
-    //     {
-    //         self.add_workspace_folder(root_uri, &workspace_folders_caps.change_notifications);
-    //         true
-    //     } else {
-    //         // the server doesn't support multi workspaces, we need a new client
-    //         false
-    //     }
-    // }
-
-    #[allow(clippy::type_complexity, clippy::too_many_arguments)]
     pub fn start(
+        cmd: String,
         args: &[String],
         config: Option<serde_json::Value>,
         server_environment: HashMap<String, String>,
@@ -131,13 +54,9 @@ impl Client {
         id: usize,
         name: String,
         req_timeout: u64,
-        doc_path: Option<&std::path::PathBuf>,
     ) -> Result<(Self, UnboundedReceiver<(usize, Call)>)> {
-        // Resolve path to the binary
-        // get the command of the lsp to run
-        // let cmd = which::which(cmd).map_err(|err| anyhow::anyhow!(err))?;
-        let cmd = which::which("zls")
-            .map_err(|err| anyhow::anyhow!("you don't have zls installed: {err:?}"))?;
+
+        let cmd: PathBuf = which::which(cmd).map_err(|err| anyhow::anyhow!(err))?;
 
         let process = Command::new(cmd)
             .envs(server_environment)
@@ -154,23 +73,24 @@ impl Client {
         let reader = BufReader::new(process.stdout.take().expect("Failed to open stdout"));
         let stderr = BufReader::new(process.stderr.take().expect("Failed to open stderr"));
 
-        let (server_rx, server_tx, initialize_notify) =
-            Transport::start(reader, writer, stderr, id, name.clone());
-        // let (workspace, workspace_is_cwd) = find_workspace();
-        // let workspace = path::get_normalized_path(&workspace);
-        // let root = find_lsp_workspace(
-        //     doc_path
-        //         .and_then(|x| x.parent().and_then(|x| x.to_str()))
-        //         .unwrap_or("."),
-        //     root_markers,
-        //     manual_roots,
-        //     &workspace,
-        //     workspace_is_cwd,
-        // );
-        let root = std::path::Path::from("/tmp/stardust/");
-        // `root_uri` and `workspace_folder` can be empty in case there is no workspace
-        // `root_url` can not, use `workspace` as a fallback
-        let root_uri = root.and_then(|root| lsp::Url::from_file_path(root).ok());
+        let (server_rx, server_tx) = Transport::start(reader, writer, stderr, id, name.clone());
+
+        let mut root = PathBuf::new();
+        root.push("/tmp/stardust");
+        let root_uri = lsp::Url::from_file_path(root).ok();
+
+        let workspace_folders = root_uri.clone().map(|root| {
+            vec![
+                lsp::WorkspaceFolder {
+                    name: root
+                    .path_segments()
+                    .and_then(|segments| segments.last())
+                    .map(|basename| basename.to_string())
+                    .unwrap_or_default(),
+                    uri: root,
+                }
+            ]
+        });
 
         let client = Self {
             id,
@@ -181,6 +101,9 @@ impl Client {
             capabilities: OnceCell::new(),
             config,
             req_timeout,
+            root_uri,
+            root_path: root,
+            workspace_folders,
         };
 
         Ok((client, server_rx))
@@ -221,7 +144,6 @@ impl Client {
     }
 
     /// Client has to be initialized otherwise this function panics
-    #[inline]
     pub fn supports_feature(&self, feature: LanguageServerFeature) -> bool {
         let capabilities = self.capabilities();
 
@@ -321,17 +243,11 @@ impl Client {
         self.config.as_ref()
     }
 
-    pub async fn workspace_folders(
-        &self,
-    ) -> parking_lot::MutexGuard<'_, Vec<lsp::WorkspaceFolder>> {
-        self.workspace_folders.lock()
-    }
-
     /// Execute a RPC request on the language server.
     async fn request<R: lsp::request::Request>(&self, params: R::Params) -> Result<R::Result>
     where
         R::Params: serde::Serialize,
-        R::Result: core::fmt::Debug, // TODO: temporary
+        R::Result: core::fmt::Debug,
     {
         // a future that resolves into the response
         let json = self.call::<R>(params).await?;
@@ -355,7 +271,7 @@ impl Client {
             use std::time::Duration;
             use tokio::time::timeout;
 
-            let params = serde_json::to_value(params)?;
+            let params: Value = serde_json::to_value(params)?;
 
             let request = jsonrpc::MethodCall {
                 jsonrpc: Some(jsonrpc::Version::V2),
@@ -373,7 +289,6 @@ impl Client {
                 })
                 .map_err(|e| Error::Other(e.into()))?;
 
-            // TODO: delay other calls until initialize success
             timeout(Duration::from_secs(timeout_secs), rx.recv())
                 .await
                 .map_err(|_| Error::Timeout(id))? // return Timeout
@@ -444,15 +359,15 @@ impl Client {
     // General messages
     // -------------------------------------------------------------------------------------------
 
-    pub(crate) async fn initialize(&self, enable_snippets: bool) -> Result<lsp::InitializeResult> {
+    pub async fn initialize(&self, enable_snippets: bool) -> Result<lsp::InitializeResult> {
         if let Some(config) = &self.config {
             log::info!("Using custom LSP config: {}", config);
         }
 
-        #[allow(deprecated)]
         let params = lsp::InitializeParams {
             process_id: Some(std::process::id()),
-            workspace_folders: Some(self.workspace_folders.lock().clone()),
+            workspace_folders: None,
+                //Some(self.workspace_folders.lock().clone()),
             // root_path is obsolete, but some clients like pyright still use it so we specify both.
             // clients will prefer _uri if possible
             root_path: self.root_path.to_str().map(|path| path.to_owned()),
@@ -584,7 +499,7 @@ impl Client {
                 name: String::from("stardust"),
                 version: Some(String::from("v0.0.0")),
             }),
-            locale: None, // TODO
+            locale: None,
         };
 
         self.request::<lsp::request::Initialize>(params).await

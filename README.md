@@ -60,3 +60,5 @@ I talked with a few people and asked them something along the lines of "if using
 easy and you knew it was faster would you use it?" and all of them responded with no. This means 
 that people are just dumb and as such there no reason to appeal to normies and make stuff "nice"
 or "friendly". As such this shell is designed to be evil. 
+
+## In addtion it also aims to support zig for easy/native c interop 
