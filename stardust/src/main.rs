@@ -3,6 +3,8 @@ mod config;
 mod env;
 mod interpreter;
 mod line;
+// mod abbrs;
+// mod pipes;
 
 use crate::{
     ast::Ast,
@@ -13,8 +15,7 @@ use crate::{
 };
 use anyhow::Result;
 use clap::Parser;
-use std::{fs::File, path::PathBuf, collections::HashMap};
-use stardust_lsp::client::Client;
+use std::{fs::File, path::PathBuf};
 
 /// A Shell to oxidize your terminal
 #[derive(Parser, Debug)]
@@ -112,7 +113,8 @@ fn main() -> ! {
     }
 }
 
-fn rushi() -> Result<()> {
+#[tokio::main]
+async fn rushi() -> Result<()> {
     let mut args = RushiArgs::parse();
     args.imply_args();
 
@@ -146,6 +148,7 @@ fn rushi() -> Result<()> {
     println!("Type 'exit' to exit.");
 
     // let (lsp, rx) = Client::start("rust-analyzer", &[""], None, HashMap::new(), 0, "rls", 100)?;
+    // lsp.initialize(true).await?;
 
     'running: loop {
         let res = l.next_line();

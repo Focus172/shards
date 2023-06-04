@@ -1,11 +1,7 @@
-# Rust things
-*target/
+target
+refs
+history.txt
 
-/refs
-
-
-# fish code to be adated
-/coreutils
+# fish code to be adapted
 stardust/src/builtins
 stardust/src/env
-history.txt

@@ -1,6 +1,11 @@
+use std::os::fd::RawFd;
+
+use super::fds::AutoCloseFd;
+
+
 pub struct Streams {
-    pub out: OutputStream,
-    pub err: OutputStream,
+    pub out: AutoCloseFd,
+    pub err: AutoCloseFd,
     pub out_is_redirected: bool,
     pub err_is_redirected: bool,
 }
