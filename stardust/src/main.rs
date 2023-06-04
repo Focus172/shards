@@ -13,7 +13,8 @@ use crate::{
 };
 use anyhow::Result;
 use clap::Parser;
-use std::{fs::File, path::PathBuf, io::stdin};
+use std::{fs::File, path::PathBuf, collections::HashMap};
+use stardust_lsp::client::Client;
 
 /// A Shell to oxidize your terminal
 #[derive(Parser, Debug)]
@@ -144,6 +145,7 @@ fn rushi() -> Result<()> {
     println!("Welcome to Rushi!");
     println!("Type 'exit' to exit.");
 
+    // let (lsp, rx) = Client::start("rust-analyzer", &[""], None, HashMap::new(), 0, "rls", 100)?;
 
     'running: loop {
         let res = l.next_line();

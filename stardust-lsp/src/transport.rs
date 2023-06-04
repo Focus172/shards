@@ -75,19 +75,22 @@ impl Transport {
 
         // HACK: inject an initialized notification in a blocking way to not have to deal with
         // it on a different thread
+        {
+            use lsp_types::notification::Notification;
 
-        // let init_fn = async {
-        //     use lsp_types::notification::Notification;
-        //     let notification = ServerMessage::Call(jsonrpc::Call::Notification(jsonrpc::Notification {
-        //         jsonrpc: None,
-        //         method: lsp_types::notification::Initialized::METHOD.to_string(),
-        //         params: jsonrpc::Params::None,
-        //     }));
-        //
-        //     let res = transport.process_server_message(&client_tx, notification, &name).await;
-        //     res.map_err(|e| error!("{name} err: <- {e:?}"));
-        // };
+            let call = jsonrpc::Call::Notification(jsonrpc::Notification {
+                jsonrpc: None,
+                method: lsp_types::notification::Initialized::METHOD.to_string(),
+                params: jsonrpc::Params::None,
+            });
 
+            let res = client_tx
+                .send((transport.id, call))
+                .context("failed to send a message to server");
+
+            res.map_err(|e| error!("{name} err: <- {e:?}")).unwrap();
+        }
+        
         tokio::spawn(Self::send(
             transport,
             server_stdin,

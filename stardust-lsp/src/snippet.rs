@@ -10,17 +10,17 @@ pub enum CaseChange {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum FormatItem {
-    Text(Tendril),
+    Text(String),
     Capture(usize),
     CaseChange(usize, CaseChange),
-    Conditional(usize, Option<Tendril>, Option<Tendril>),
+    Conditional(usize, Option<String>, Option<String>),
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Regex {
-    value: Tendril,
+    value: String,
     replacement: Vec<FormatItem>,
-    options: Tendril,
+    options: String,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -34,14 +34,14 @@ pub enum SnippetElement<'a> {
     },
     Choice {
         tabstop: usize,
-        choices: Vec<Tendril>,
+        choices: Vec<String>,
     },
     Variable {
         name: &'a str,
         default: Option<Vec<SnippetElement<'a>>>,
         regex: Option<Regex>,
     },
-    Text(Tendril),
+    Text(String),
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -55,7 +55,7 @@ pub fn parse(s: &str) -> Result<Snippet<'_>> {
 
 fn render_elements(
     snippet_elements: &[SnippetElement<'_>],
-    insert: &mut Tendril,
+    insert: &mut String,
     offset: &mut usize,
     tabstops: &mut Vec<(usize, (usize, usize))>,
     newline_with_offset: &str,
@@ -121,13 +121,12 @@ fn render_elements(
     }
 }
 
-#[allow(clippy::type_complexity)] // only used one time
 pub fn render(
     snippet: &Snippet<'_>,
     newline_with_offset: &str,
     include_placeholder: bool,
-) -> (Tendril, Vec<SmallVec<[(usize, usize); 1]>>) {
-    let mut insert = Tendril::new();
+) -> (String, (usize, usize)) {
+    let mut insert = String::new();
     let mut tabstops = Vec::new();
     let mut offset = 0;
 
@@ -217,10 +216,10 @@ mod parser {
     fn text<'a>(
         escape_chars: &'static [char],
         term_chars: &'static [char],
-    ) -> impl Parser<'a, Output = Tendril> {
+    ) -> impl Parser<'a, Output = String> {
         move |input: &'a str| {
             let mut chars = input.char_indices().peekable();
-            let mut res = Tendril::new();
+            let mut res = String::new();
             while let Some((i, c)) = chars.next() {
                 match c {
                     '\\' => {

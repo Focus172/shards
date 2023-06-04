@@ -40,14 +40,12 @@ pub struct Client {
 
 impl Client {
     pub fn start(
-        cmd: String,
-        args: &[String],
+        cmd: &str,
+        args: &[&str],
         config: Option<serde_json::Value>,
         server_environment: HashMap<String, String>,
-        root_markers: &[String],
-        manual_roots: &[PathBuf],
         id: usize,
-        name: String,
+        name: &str,
         req_timeout: u64,
     ) -> Result<(Self, UnboundedReceiver<(usize, Call)>)> {
 
@@ -68,11 +66,11 @@ impl Client {
         let reader = BufReader::new(process.stdout.take().expect("Failed to open stdout"));
         let stderr = BufReader::new(process.stderr.take().expect("Failed to open stderr"));
 
-        let (server_rx, server_tx) = Transport::start(reader, writer, stderr, id, name.clone());
+        let (server_rx, server_tx) = Transport::start(reader, writer, stderr, id, name.to_string());
 
         let mut root = PathBuf::new();
         root.push("/tmp/stardust");
-        let root_uri = lsp::Url::from_file_path(root).ok();
+        let root_uri = lsp::Url::from_file_path(root.clone()).ok();
 
         let workspace_folders = root_uri.clone().map(|root| {
             vec![
@@ -89,7 +87,7 @@ impl Client {
 
         let client = Self {
             id,
-            name,
+            name: name.to_string(),
             process,
             server_tx,
             request_counter: AtomicU64::new(0),
@@ -768,7 +766,6 @@ impl Client {
                 text_document,
                 position,
             },
-            // TODO: support these tokens by async receiving and updating the choice list
             work_done_progress_params: lsp::WorkDoneProgressParams { work_done_token },
             partial_result_params: lsp::PartialResultParams {
                 partial_result_token: None,

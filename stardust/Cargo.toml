@@ -14,3 +14,5 @@ log = "0.4.17"
 simplelog = "0.12.1"
 xdg = "2.5.0"
 syn = "2.0.16"
+
+stardust-lsp = { path = "../stardust-lsp" }

@@ -186,26 +186,7 @@ pub fn lsp_range_to_range(
     Some(Range::new(start, end))
 }
 
-/// If the LS did not provide a range for the completion or the range of the
-/// primary cursor can not be used for the secondary cursor, this function
-/// can be used to find the completion range for a cursor
-fn find_completion_range(text: RopeSlice, replace_mode: bool, cursor: usize) -> (usize, usize) {
-    let start = cursor
-        - text
-            .chars_at(cursor)
-            .reversed()
-            .take_while(|ch| chars::char_is_word(*ch))
-            .count();
-    let mut end = cursor;
-    if replace_mode {
-        end += text
-            .chars_at(cursor)
-            .skip(1)
-            .take_while(|ch| chars::char_is_word(*ch))
-            .count();
-    }
-    (start, end)
-}
+
 fn completion_range(
     text: RopeSlice,
     edit_offset: Option<(i128, i128)>,
@@ -460,252 +441,252 @@ pub fn generate_transaction_from_edits(
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum MethodCall {
-WorkDoneProgressCreate(lsp::WorkDoneProgressCreateParams),
-ApplyWorkspaceEdit(lsp::ApplyWorkspaceEditParams),
-WorkspaceFolders,
-WorkspaceConfiguration(lsp::ConfigurationParams),
-RegisterCapability(lsp::RegistrationParams),
+    WorkDoneProgressCreate(lsp::WorkDoneProgressCreateParams),
+    ApplyWorkspaceEdit(lsp::ApplyWorkspaceEditParams),
+    WorkspaceFolders,
+    WorkspaceConfiguration(lsp::ConfigurationParams),
+    RegisterCapability(lsp::RegistrationParams),
 }
 
 impl MethodCall {
-pub fn parse(method: &str, params: jsonrpc::Params) -> Result<MethodCall> {
-    use lsp::request::Request;
-    let request = match method {
-        lsp::request::WorkDoneProgressCreate::METHOD => {
-            let params: lsp::WorkDoneProgressCreateParams = params.parse()?;
-            Self::WorkDoneProgressCreate(params)
-        }
-        lsp::request::ApplyWorkspaceEdit::METHOD => {
-            let params: lsp::ApplyWorkspaceEditParams = params.parse()?;
-            Self::ApplyWorkspaceEdit(params)
-        }
-        lsp::request::WorkspaceFoldersRequest::METHOD => Self::WorkspaceFolders,
-        lsp::request::WorkspaceConfiguration::METHOD => {
-            let params: lsp::ConfigurationParams = params.parse()?;
-            Self::WorkspaceConfiguration(params)
-        }
-        lsp::request::RegisterCapability::METHOD => {
-            let params: lsp::RegistrationParams = params.parse()?;
-            Self::RegisterCapability(params)
-        }
-        _ => {
-            return Err(Error::Unhandled);
-        }
-    };
-    Ok(request)
-}
+    pub fn parse(method: &str, params: jsonrpc::Params) -> Result<MethodCall> {
+        use lsp::request::Request;
+        let request = match method {
+            lsp::request::WorkDoneProgressCreate::METHOD => {
+                let params: lsp::WorkDoneProgressCreateParams = params.parse()?;
+                Self::WorkDoneProgressCreate(params)
+            }
+            lsp::request::ApplyWorkspaceEdit::METHOD => {
+                let params: lsp::ApplyWorkspaceEditParams = params.parse()?;
+                Self::ApplyWorkspaceEdit(params)
+            }
+            lsp::request::WorkspaceFoldersRequest::METHOD => Self::WorkspaceFolders,
+            lsp::request::WorkspaceConfiguration::METHOD => {
+                let params: lsp::ConfigurationParams = params.parse()?;
+                Self::WorkspaceConfiguration(params)
+            }
+            lsp::request::RegisterCapability::METHOD => {
+                let params: lsp::RegistrationParams = params.parse()?;
+                Self::RegisterCapability(params)
+            }
+            _ => {
+                return Err(Error::Unhandled);
+            }
+        };
+        Ok(request)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Notification {
-// we inject this notification to signal the LSP is ready
-Initialized,
-// and this notification to signal that the LSP exited
-Exit,
-PublishDiagnostics(lsp::PublishDiagnosticsParams),
-ShowMessage(lsp::ShowMessageParams),
-LogMessage(lsp::LogMessageParams),
-ProgressMessage(lsp::ProgressParams),
+    // we inject this notification to signal the LSP is ready
+    Initialized,
+    // and this notification to signal that the LSP exited
+    Exit,
+    PublishDiagnostics(lsp::PublishDiagnosticsParams),
+    ShowMessage(lsp::ShowMessageParams),
+    LogMessage(lsp::LogMessageParams),
+    ProgressMessage(lsp::ProgressParams),
 }
 
 impl Notification {
-pub fn parse(method: &str, params: jsonrpc::Params) -> Result<Notification> {
-    use lsp::notification::Notification as _;
+    pub fn parse(method: &str, params: jsonrpc::Params) -> Result<Notification> {
+        use lsp::notification::Notification as _;
 
-    let notification = match method {
-        lsp::notification::Initialized::METHOD => Self::Initialized,
-        lsp::notification::Exit::METHOD => Self::Exit,
-        lsp::notification::PublishDiagnostics::METHOD => {
-            let params: lsp::PublishDiagnosticsParams = params.parse()?;
-            Self::PublishDiagnostics(params)
-        }
+        let notification = match method {
+            lsp::notification::Initialized::METHOD => Self::Initialized,
+            lsp::notification::Exit::METHOD => Self::Exit,
+            lsp::notification::PublishDiagnostics::METHOD => {
+                let params: lsp::PublishDiagnosticsParams = params.parse()?;
+                Self::PublishDiagnostics(params)
+            }
 
-        lsp::notification::ShowMessage::METHOD => {
-            let params: lsp::ShowMessageParams = params.parse()?;
-            Self::ShowMessage(params)
-        }
-        lsp::notification::LogMessage::METHOD => {
-            let params: lsp::LogMessageParams = params.parse()?;
-            Self::LogMessage(params)
-        }
-        lsp::notification::Progress::METHOD => {
-            let params: lsp::ProgressParams = params.parse()?;
-            Self::ProgressMessage(params)
-        }
-        _ => {
-            return Err(Error::Unhandled);
-        }
-    };
+            lsp::notification::ShowMessage::METHOD => {
+                let params: lsp::ShowMessageParams = params.parse()?;
+                Self::ShowMessage(params)
+            }
+            lsp::notification::LogMessage::METHOD => {
+                let params: lsp::LogMessageParams = params.parse()?;
+                Self::LogMessage(params)
+            }
+            lsp::notification::Progress::METHOD => {
+                let params: lsp::ProgressParams = params.parse()?;
+                Self::ProgressMessage(params)
+            }
+            _ => {
+                return Err(Error::Unhandled);
+            }
+        };
 
-    Ok(notification)
-}
+        Ok(notification)
+    }
 }
 
 #[derive(Debug)]
 pub struct Registry {
-inner: HashMap<LanguageServerName, Vec<Arc<Client>>>,
-syn_loader: Arc<helix_core::syntax::Loader>,
-counter: usize,
-pub incoming: SelectAll<UnboundedReceiverStream<(usize, Call)>>,
+    inner: HashMap<LanguageServerName, Vec<Arc<Client>>>,
+    syn_loader: Arc<helix_core::syntax::Loader>,
+    counter: usize,
+    pub incoming: SelectAll<UnboundedReceiverStream<(usize, Call)>>,
 }
 
 impl Registry {
-pub fn new(syn_loader: Arc<helix_core::syntax::Loader>) -> Self {
-    Self {
-        inner: HashMap::new(),
-        syn_loader,
-        counter: 0,
-        incoming: SelectAll::new(),
+    pub fn new(syn_loader: Arc<helix_core::syntax::Loader>) -> Self {
+        Self {
+            inner: HashMap::new(),
+            syn_loader,
+            counter: 0,
+            incoming: SelectAll::new(),
+        }
     }
-}
 
-pub fn get_by_id(&self, id: usize) -> Option<&Client> {
-    self.inner
-        .values()
-        .flatten()
-        .find(|client| client.id() == id)
-        .map(|client| &**client)
-}
+    pub fn get_by_id(&self, id: usize) -> Option<&Client> {
+        self.inner
+            .values()
+            .flatten()
+            .find(|client| client.id() == id)
+            .map(|client| &**client)
+    }
 
-pub fn remove_by_id(&mut self, id: usize) {
-    self.inner.retain(|_, language_servers| {
-        language_servers.retain(|ls| id != ls.id());
-        !language_servers.is_empty()
-    });
-}
+    pub fn remove_by_id(&mut self, id: usize) {
+        self.inner.retain(|_, language_servers| {
+            language_servers.retain(|ls| id != ls.id());
+            !language_servers.is_empty()
+        });
+    }
 
-fn start_client(
-    &mut self,
-    name: String,
-    ls_config: &LanguageConfiguration,
-    doc_path: Option<&std::path::PathBuf>,
-    root_dirs: &[PathBuf],
-    enable_snippets: bool,
-) -> Result<Arc<Client>> {
-    let config = self
-        .syn_loader
-        .language_server_configs()
-        .get(&name)
-        .ok_or_else(|| anyhow::anyhow!("Language server '{name}' not defined"))?;
-    let id = self.counter;
-    self.counter += 1;
-    let NewClient(client, incoming) = start_client(
-        id,
-        name,
-        ls_config,
-        config,
-        doc_path,
-        root_dirs,
-        enable_snippets,
-    )?;
-    self.incoming.push(UnboundedReceiverStream::new(incoming));
-    Ok(client)
-}
+    fn start_client(
+        &mut self,
+        name: String,
+        ls_config: &LanguageConfiguration,
+        doc_path: Option<&std::path::PathBuf>,
+        root_dirs: &[PathBuf],
+        enable_snippets: bool,
+    ) -> Result<Arc<Client>> {
+        let config = self
+            .syn_loader
+            .language_server_configs()
+            .get(&name)
+            .ok_or_else(|| anyhow::anyhow!("Language server '{name}' not defined"))?;
+        let id = self.counter;
+        self.counter += 1;
+        let NewClient(client, incoming) = start_client(
+            id,
+            name,
+            ls_config,
+            config,
+            doc_path,
+            root_dirs,
+            enable_snippets,
+        )?;
+        self.incoming.push(UnboundedReceiverStream::new(incoming));
+        Ok(client)
+    }
 
-/// If this method is called, all documents that have a reference to language servers used by the language config have to refresh their language servers,
-/// as it could be that language servers of these documents were stopped by this method.
-/// See helix_view::editor::Editor::refresh_language_servers
-pub fn restart(
-    &mut self,
-    language_config: &LanguageConfiguration,
-    doc_path: Option<&std::path::PathBuf>,
-    root_dirs: &[PathBuf],
-    enable_snippets: bool,
-) -> Result<Vec<Arc<Client>>> {
-    language_config
-        .language_servers
-        .iter()
-        .filter_map(|LanguageServerFeatures { name, .. }| {
-            if self.inner.contains_key(name) {
-                let client = match self.start_client(
+    /// If this method is called, all documents that have a reference to language servers used by the language config have to refresh their language servers,
+    /// as it could be that language servers of these documents were stopped by this method.
+    /// See helix_view::editor::Editor::refresh_language_servers
+    pub fn restart(
+        &mut self,
+        language_config: &LanguageConfiguration,
+        doc_path: Option<&std::path::PathBuf>,
+        root_dirs: &[PathBuf],
+        enable_snippets: bool,
+    ) -> Result<Vec<Arc<Client>>> {
+        language_config
+            .language_servers
+            .iter()
+            .filter_map(|LanguageServerFeatures { name, .. }| {
+                if self.inner.contains_key(name) {
+                    let client = match self.start_client(
+                        name.clone(),
+                        language_config,
+                        doc_path,
+                        root_dirs,
+                        enable_snippets,
+                    ) {
+                        Ok(client) => client,
+                        error => return Some(error),
+                    };
+                    let old_clients = self
+                        .inner
+                        .insert(name.clone(), vec![client.clone()])
+                        .unwrap();
+
+                    for old_client in old_clients {
+                        tokio::spawn(async move { // async
+                            let _ = old_client.force_shutdown().await;
+                        });
+                    }
+
+                    Some(Ok(client))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    pub fn stop(&mut self, name: &str) {
+        if let Some(clients) = self.inner.remove(name) {
+            for client in clients {
+                tokio::spawn(async move {
+                    let _ = client.force_shutdown().await;
+                });
+            }
+        }
+    }
+
+    pub fn get(
+        &mut self,
+        language_config: &LanguageConfiguration,
+        doc_path: Option<&std::path::PathBuf>,
+        root_dirs: &[PathBuf],
+        enable_snippets: bool,
+    ) -> Result<HashMap<LanguageServerName, Arc<Client>>> {
+        language_config
+            .language_servers
+            .iter()
+            .map(|LanguageServerFeatures { name, .. }| {
+                if let Some(clients) = self.inner.get(name) {
+                    if let Some((_, client)) = clients.iter().enumerate().find(|(i, client)| {
+                        client.try_add_doc(&language_config.roots, root_dirs, doc_path, *i == 0)
+                    }) {
+                        return Ok((name.to_owned(), client.clone()));
+                    }
+                }
+                let client = self.start_client(
                     name.clone(),
                     language_config,
                     doc_path,
                     root_dirs,
                     enable_snippets,
-                ) {
-                    Ok(client) => client,
-                    error => return Some(error),
-                };
-                let old_clients = self
-                    .inner
-                    .insert(name.clone(), vec![client.clone()])
-                    .unwrap();
-
-                for old_client in old_clients {
-                    tokio::spawn(async move { // async
-                        let _ = old_client.force_shutdown().await;
-                    });
-                }
-
-                Some(Ok(client))
-            } else {
-                None
-            }
-        })
-        .collect()
-}
-
-pub fn stop(&mut self, name: &str) {
-    if let Some(clients) = self.inner.remove(name) {
-        for client in clients {
-            tokio::spawn(async move {
-                let _ = client.force_shutdown().await;
-            });
-        }
+                )?;
+                let clients = self.inner.entry(name.clone()).or_default();
+                clients.push(client.clone());
+                Ok((name.clone(), client))
+            })
+            .collect()
     }
-}
 
-pub fn get(
-    &mut self,
-    language_config: &LanguageConfiguration,
-    doc_path: Option<&std::path::PathBuf>,
-    root_dirs: &[PathBuf],
-    enable_snippets: bool,
-) -> Result<HashMap<LanguageServerName, Arc<Client>>> {
-    language_config
-        .language_servers
-        .iter()
-        .map(|LanguageServerFeatures { name, .. }| {
-            if let Some(clients) = self.inner.get(name) {
-                if let Some((_, client)) = clients.iter().enumerate().find(|(i, client)| {
-                    client.try_add_doc(&language_config.roots, root_dirs, doc_path, *i == 0)
-                }) {
-                    return Ok((name.to_owned(), client.clone()));
-                }
-            }
-            let client = self.start_client(
-                name.clone(),
-                language_config,
-                doc_path,
-                root_dirs,
-                enable_snippets,
-            )?;
-            let clients = self.inner.entry(name.clone()).or_default();
-            clients.push(client.clone());
-            Ok((name.clone(), client))
-        })
-        .collect()
-}
-
-pub fn iter_clients(&self) -> impl Iterator<Item = &Arc<Client>> {
-    self.inner.values().flatten()
-}
+    pub fn iter_clients(&self) -> impl Iterator<Item = &Arc<Client>> {
+        self.inner.values().flatten()
+    }
 }
 
 #[derive(Debug)]
 pub enum ProgressStatus {
-Created,
-Started(lsp::WorkDoneProgress),
+    Created,
+    Started(lsp::WorkDoneProgress),
 }
 
 impl ProgressStatus {
-pub fn progress(&self) -> Option<&lsp::WorkDoneProgress> {
-    match &self {
-        ProgressStatus::Created => None,
-        ProgressStatus::Started(progress) => Some(progress),
+    pub fn progress(&self) -> Option<&lsp::WorkDoneProgress> {
+        match &self {
+            ProgressStatus::Created => None,
+            ProgressStatus::Started(progress) => Some(progress),
+        }
     }
-}
 }
 
 #[derive(Default, Debug)]
@@ -715,60 +696,60 @@ pub fn progress(&self) -> Option<&lsp::WorkDoneProgress> {
 pub struct LspProgressMap(HashMap<usize, HashMap<lsp::ProgressToken, ProgressStatus>>);
 
 impl LspProgressMap {
-pub fn new() -> Self {
-    Self::default()
-}
+    pub fn new() -> Self {
+        Self::default()
+    }
 
-/// Returns a map of all tokens corresponding to the language server with `id`.
-pub fn progress_map(&self, id: usize) -> Option<&HashMap<lsp::ProgressToken, ProgressStatus>> {
-    self.0.get(&id)
-}
+    /// Returns a map of all tokens corresponding to the language server with `id`.
+    pub fn progress_map(&self, id: usize) -> Option<&HashMap<lsp::ProgressToken, ProgressStatus>> {
+        self.0.get(&id)
+    }
 
-pub fn is_progressing(&self, id: usize) -> bool {
-    self.0.get(&id).map(|it| !it.is_empty()).unwrap_or_default()
-}
+    pub fn is_progressing(&self, id: usize) -> bool {
+        self.0.get(&id).map(|it| !it.is_empty()).unwrap_or_default()
+    }
 
-/// Returns last progress status for a given server with `id` and `token`.
-pub fn progress(&self, id: usize, token: &lsp::ProgressToken) -> Option<&ProgressStatus> {
-    self.0.get(&id).and_then(|values| values.get(token))
-}
+    /// Returns last progress status for a given server with `id` and `token`.
+    pub fn progress(&self, id: usize, token: &lsp::ProgressToken) -> Option<&ProgressStatus> {
+        self.0.get(&id).and_then(|values| values.get(token))
+    }
 
-/// Checks if progress `token` for server with `id` is created.
-pub fn is_created(&mut self, id: usize, token: &lsp::ProgressToken) -> bool {
-    self.0
-        .get(&id)
-        .map(|values| values.get(token).is_some())
-        .unwrap_or_default()
-}
+    /// Checks if progress `token` for server with `id` is created.
+    pub fn is_created(&mut self, id: usize, token: &lsp::ProgressToken) -> bool {
+        self.0
+            .get(&id)
+            .map(|values| values.get(token).is_some())
+            .unwrap_or_default()
+    }
 
-pub fn create(&mut self, id: usize, token: lsp::ProgressToken) {
-    self.0
-        .entry(id)
-        .or_default()
-        .insert(token, ProgressStatus::Created);
-}
+    pub fn create(&mut self, id: usize, token: lsp::ProgressToken) {
+        self.0
+            .entry(id)
+            .or_default()
+            .insert(token, ProgressStatus::Created);
+    }
 
-/// Ends the progress by removing the `token` from server with `id`, if removed returns the value.
-pub fn end_progress(
-    &mut self,
-    id: usize,
-    token: &lsp::ProgressToken,
-) -> Option<ProgressStatus> {
-    self.0.get_mut(&id).and_then(|vals| vals.remove(token))
-}
+    /// Ends the progress by removing the `token` from server with `id`, if removed returns the value.
+    pub fn end_progress(
+        &mut self,
+        id: usize,
+        token: &lsp::ProgressToken,
+    ) -> Option<ProgressStatus> {
+        self.0.get_mut(&id).and_then(|vals| vals.remove(token))
+    }
 
-/// Updates the progress of `token` for server with `id` to `status`, returns the value replaced or `None`.
-pub fn update(
-    &mut self,
-    id: usize,
-    token: lsp::ProgressToken,
-    status: lsp::WorkDoneProgress,
-) -> Option<ProgressStatus> {
-    self.0
-        .entry(id)
-        .or_default()
-        .insert(token, ProgressStatus::Started(status))
-}
+    /// Updates the progress of `token` for server with `id` to `status`, returns the value replaced or `None`.
+    pub fn update(
+        &mut self,
+        id: usize,
+        token: lsp::ProgressToken,
+        status: lsp::WorkDoneProgress,
+    ) -> Option<ProgressStatus> {
+        self.0
+            .entry(id)
+            .or_default()
+            .insert(token, ProgressStatus::Started(status))
+    }
 }
 
 struct NewClient(Arc<Client>, UnboundedReceiver<(usize, Call)>);
@@ -776,114 +757,55 @@ struct NewClient(Arc<Client>, UnboundedReceiver<(usize, Call)>);
 /// start_client takes both a LanguageConfiguration and a LanguageServerConfiguration to ensure that
 /// it is only called when it makes sense.
 fn start_client(
-id: usize,
-name: String,
-config: &LanguageConfiguration,
-ls_config: &LanguageServerConfiguration,
-doc_path: Option<&std::path::PathBuf>,
-root_dirs: &[PathBuf],
-enable_snippets: bool,
+    id: usize,
+    name: String,
+    config: &LanguageConfiguration,
+    ls_config: &LanguageServerConfiguration,
+    doc_path: Option<&std::path::PathBuf>,
+    root_dirs: &[PathBuf],
+    enable_snippets: bool,
 ) -> Result<NewClient> {
-let (client, incoming, initialize_notify) = Client::start(
-    &ls_config.command,
-    &ls_config.args,
-    ls_config.config.clone(),
-    ls_config.environment.clone(),
-    &config.roots,
-    config.workspace_lsp_roots.as_deref().unwrap_or(root_dirs),
-    id,
-    name,
-    ls_config.timeout,
-    doc_path,
-)?;
+    let (client, incoming, initialize_notify) = Client::start(
+        &ls_config.command,
+        &ls_config.args,
+        ls_config.config.clone(),
+        ls_config.environment.clone(),
+        &config.roots,
+        config.workspace_lsp_roots.as_deref().unwrap_or(root_dirs),
+        id,
+        name,
+        ls_config.timeout,
+        doc_path,
+    )?;
 
-let client = Arc::new(client);
+    let client = Arc::new(client);
 
-// Initialize the client asynchronously
-let _client = client.clone();
-tokio::spawn(async move {
-    use futures_util::TryFutureExt;
-    let value = _client
-        .capabilities
-        .get_or_try_init(|| {
-            _client
-                .initialize(enable_snippets)
-                .map_ok(|response| response.capabilities)
-        })
-        .await;
+    // Initialize the client asynchronously
+    let _client = client.clone();
+    tokio::spawn(async move {
+        use futures_util::TryFutureExt;
+        let value = _client
+            .capabilities
+            .get_or_try_init(|| {
+                _client
+                    .initialize(enable_snippets)
+                    .map_ok(|response| response.capabilities)
+            })
+            .await;
 
-    if let Err(e) = value {
-        log::error!("failed to initialize language server: {}", e);
-        return;
-    }
+        if let Err(e) = value {
+            log::error!("failed to initialize language server: {}", e);
+            return;
+        }
 
-    // next up, notify<initialized>
-    _client
-        .notify::<lsp::notification::Initialized>(lsp::InitializedParams {})
-        .await
-        .unwrap();
+        // next up, notify<initialized>
+        _client
+            .notify::<lsp::notification::Initialized>(lsp::InitializedParams {})
+            .await
+            .unwrap();
 
-    initialize_notify.notify_one();
-});
+        initialize_notify.notify_one();
+    });
 
-Ok(NewClient(client, incoming))
-}
-
-/// Find an LSP workspace of a file using the following mechanism:
-/// * if the file is outside `workspace` return `None`
-/// * start at `file` and search the file tree upward
-/// * stop the search at the first `root_dirs` entry that contains `file`
-/// * if no `root_dirs` matches `file` stop at workspace
-/// * Returns the top most directory that contains a `root_marker`
-/// * If no root marker and we stopped at a `root_dirs` entry, return the directory we stopped at
-/// * If we stopped at `workspace` instead and `workspace_is_cwd == false` return `None`
-/// * If we stopped at `workspace` instead and `workspace_is_cwd == true` return `workspace`
-pub fn find_lsp_workspace(
-file: &str,
-root_markers: &[String],
-root_dirs: &[PathBuf],
-workspace: &Path,
-workspace_is_cwd: bool,
-) -> Option<PathBuf> {
-let file = std::path::Path::new(file);
-let mut file = if file.is_absolute() {
-    file.to_path_buf()
-} else {
-    let current_dir = std::env::current_dir().expect("unable to determine current directory");
-    current_dir.join(file)
-};
-file = path::get_normalized_path(&file);
-
-if !file.starts_with(workspace) {
-    return None;
-}
-
-let mut top_marker = None;
-for ancestor in file.ancestors() {
-    if root_markers
-        .iter()
-        .any(|marker| ancestor.join(marker).exists())
-    {
-        top_marker = Some(ancestor);
-    }
-
-    if root_dirs
-        .iter()
-        .any(|root_dir| path::get_normalized_path(&workspace.join(root_dir)) == ancestor)
-    {
-        // if the worskapce is the cwd do not search any higher for workspaces
-        // but specify
-        return Some(top_marker.unwrap_or(workspace).to_owned());
-    }
-    if ancestor == workspace {
-        // if the workspace is the CWD, let the LSP decide what the workspace
-        // is
-        return top_marker
-            .or_else(|| (!workspace_is_cwd).then_some(workspace))
-            .map(Path::to_owned);
-    }
-}
-
-debug_assert!(false, "workspace must be an ancestor of <file>");
-None
+    Ok(NewClient(client, incoming))
 }
