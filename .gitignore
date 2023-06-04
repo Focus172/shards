@@ -1,10 +1,10 @@
 # Rust things
 *target/
 
-# some things I am using as references/deps
-/fish
-/coreutils
+/refs
+
 
 # fish code to be adated
+/coreutils
 stardust/src/builtins
 stardust/src/env

@@ -1,0 +1,8 @@
+[package]
+name = "rushi"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+syn = { version = "2.0.18", features = ["full", "extra-traits"] }

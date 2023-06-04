@@ -58,7 +58,7 @@ impl Transport {
 
         let transport = Self {
             id,
-            name,
+            name: name.clone(),
             pending_requests: Mutex::new(HashMap::default()),
         };
 
@@ -71,12 +71,31 @@ impl Transport {
         ));
 
         tokio::spawn(Self::err(transport.clone(), server_stderr));
+
+
+        // HACK: inject an initialized notification in a blocking way to not have to deal with
+        // it on a different thread
+
+        // let init_fn = async {
+        //     use lsp_types::notification::Notification;
+        //     let notification = ServerMessage::Call(jsonrpc::Call::Notification(jsonrpc::Notification {
+        //         jsonrpc: None,
+        //         method: lsp_types::notification::Initialized::METHOD.to_string(),
+        //         params: jsonrpc::Params::None,
+        //     }));
+        //
+        //     let res = transport.process_server_message(&client_tx, notification, &name).await;
+        //     res.map_err(|e| error!("{name} err: <- {e:?}"));
+        // };
+
         tokio::spawn(Self::send(
             transport,
             server_stdin,
             client_tx,
             client_rx,
         ));
+
+
 
         (rx, tx)
     }
@@ -114,7 +133,7 @@ impl Transport {
                     // into the same stream as JSON-RPC messages. This can also happen from shell scripts that spawn
                     // the server. Skip such lines and log a warning.
 
-                    // warn!("Failed to parse header: {:?}", header);
+                    log::warn!("Failed to parse header: {:?}", header);
                 }
             }
         }
@@ -327,88 +346,17 @@ impl Transport {
         client_tx: UnboundedSender<(usize, jsonrpc::Call)>,
         mut client_rx: UnboundedReceiver<Payload>,
     ) {
-        let mut pending_messages: Vec<Payload> = Vec::new();
-        let mut is_pending = true;
-
-        // Determine if a message is allowed to be sent early
-        fn is_initialize(payload: &Payload) -> bool {
-            use lsp_types::{
-                notification::{Initialized, Notification},
-                request::{Initialize, Request},
-            };
-            match payload {
-                Payload::Request {
-                    value: jsonrpc::MethodCall { method, .. },
-                    ..
-                } if method == Initialize::METHOD => true,
-                Payload::Notification(jsonrpc::Notification { method, .. })
-                    if method == Initialized::METHOD =>
-                {
-                    true
-                }
-                _ => false,
-            }
-        }
-
-        // TODO: events that use capabilities need to do the right thing
-
         loop {
-            tokio::select! {
-                biased;
-                _ = initialize_notify.notified() => { // TODO: notified is technically not cancellation safe
-                    // server successfully initialized
-                    is_pending = false;
-
-                    use lsp_types::notification::Notification;
-                    // Hack: inject an initialized notification so we trigger code that needs to happen after init
-                    let notification = ServerMessage::Call(jsonrpc::Call::Notification(jsonrpc::Notification {
-                        jsonrpc: None,
-
-                        method: lsp_types::notification::Initialized::METHOD.to_string(),
-                        params: jsonrpc::Params::None,
-                    }));
-                    let language_server_name = &transport.name;
-                    match transport.process_server_message(&client_tx, notification, language_server_name).await {
-                        Ok(_) => {}
-                        Err(err) => {
-                            error!("{language_server_name} err: <- {err:?}");
-                        }
-                    }
-
-                    // drain the pending queue and send payloads to server
-                    for msg in pending_messages.drain(..) {
-                        log::info!("Draining pending message {:?}", msg);
-                        match transport.send_payload_to_server(&mut server_stdin, msg).await {
-                            Ok(_) => {}
-                            Err(err) => {
-                                error!("{language_server_name} err: <- {err:?}");
-                            }
-                        }
+            if let Some(msg) = client_rx.recv().await {
+                match transport.send_payload_to_server(&mut server_stdin, msg).await {
+                    Ok(_) => {}
+                    Err(err) => {
+                        error!("{} err: <- {err:?}", transport.name);
                     }
                 }
-                msg = client_rx.recv() => {
-                    if let Some(msg) = msg {
-                        if is_pending && !is_initialize(&msg) {
-                            // ignore notifications
-                            if let Payload::Notification(_) = msg {
-                                continue;
-                            }
-
-                            log::info!("Language server not initialized, delaying request");
-                            pending_messages.push(msg);
-                        } else {
-                            match transport.send_payload_to_server(&mut server_stdin, msg).await {
-                                Ok(_) => {}
-                                Err(err) => {
-                                    error!("{} err: <- {err:?}", transport.name);
-                                }
-                            }
-                        }
-                    } else {
-                        // channel closed
-                        break;
-                    }
-                }
+            } else {
+                // channel closed
+                break;
             }
         }
     }

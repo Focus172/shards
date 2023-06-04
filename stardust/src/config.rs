@@ -5,7 +5,8 @@ use std::{
 };
 
 use crate::RushiArgs;
-use crate::env::UserState;
+use crate::env::{UserState, SystemState};
+use crate::interpreter::Interpreter;
 
 pub struct ConfigPaths {
     user: Option<PathBuf>,
@@ -34,7 +35,7 @@ impl ConfigPaths {
     }
 
     /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
-    pub fn source(&mut self, env: &mut UserState) {
+    pub fn source(&mut self, interpreter: &Interpreter, env: &mut UserState, sys: &mut SystemState) {
         if let Some(user) = &mut self.user {
             log::info!("sourcing user config");
             Self::source_config_in_directory(user, env);
@@ -45,8 +46,8 @@ impl ConfigPaths {
         }
     }
 
-    /// Source the file config.rsi in the given directory.
-    /// If the config.fish file doesn't exist or isn't readable silently return.
+    /// Source the file config.rsi or config.zigi in the given directory.
+    /// If the config file doesn't exist or isn't readable silently return.
     fn source_config_in_directory(path: &mut PathBuf, _env: &mut UserState) {
         // We need to get the configuration directory before we can source the user configuration file.
         // If path_get_config returns false then we have no configuration directory and no custom config

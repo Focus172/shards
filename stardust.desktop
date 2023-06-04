@@ -6,5 +6,4 @@ Exec=stardust
 Name=stardust
 Comment=A shell sent from mars
 Icon=stardust
-# "Shell" would be the proper category, but it's reserved so we can't use it.
 Categories=ConsoleOnly;System;

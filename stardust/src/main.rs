@@ -2,16 +2,18 @@ mod ast;
 mod config;
 mod env;
 mod interpreter;
+mod line;
 
 use crate::{
     ast::Ast,
     config::ConfigPaths,
-    env::{UserState, SystemState},
+    env::{SystemState, UserState},
     interpreter::Interpreter,
+    line::Line,
 };
 use anyhow::Result;
 use clap::Parser;
-use std::{fs::File, path::PathBuf};
+use std::{fs::File, path::PathBuf, io::stdin};
 
 /// A Shell to oxidize your terminal
 #[derive(Parser, Debug)]
@@ -47,9 +49,8 @@ pub struct RushiArgs {
     #[arg(short = 'p', long, value_name = "PATH", value_hint = clap::ValueHint::FilePath)]
     custom_config: Option<PathBuf>,
 
-    // TODO: no_config implies private mode
     /// Whether no-exec is set.
-    #[arg(short, long, default_value_t = false)]
+    #[arg(short = 'n', long, default_value_t = false)]
     no_execute: bool,
 
     /// Whether this is a login shell.
@@ -75,15 +76,25 @@ pub struct RushiArgs {
 impl RushiArgs {
     fn imply_args(&mut self) {
         // if the first argument starts with a dash, we are a login shell
-        // TODO: ask clap project to provide this in some way
         if std::env::args().take(1).any(|arg| arg.starts_with('-')) {
             self.is_login = true;
+        }
+
+        // no_config implies private mode
+        if self.no_config {
+            self.private_mode = true;
+        }
+
+        // an output file implies something to output
+        if self.debug_output.is_some() {
+            self.debug = true;
         }
 
         // We are an interactive session if we have not been given an explicit
         // command or file to execute and stdin is a tty. Note that the -i or
         // --interactive options also force interactive mode.
         if self.batch_cmds.is_none() {
+            // stdin().lines().is_none()
             // && is a tty
             self.is_interactive_session = true;
         }
@@ -117,30 +128,37 @@ fn rushi() -> Result<()> {
         log::info!("Debug mode enabled");
     }
 
-    // signal_unblock_all();
-
     // setlocale(LC_ALL, "");
 
     let mut env = UserState::new(&args);
-
-    // source user and system config
-    let mut paths = ConfigPaths::new(&args);
-    paths.source(&mut env);
-
     let mut sys = SystemState::new(&env);
-
-
-    let rl = reedline::Editor::default();
-    println!("Welcome to Rushi!");
-    println!("Type 'exit' to exit.");
 
     let interpreter = Interpreter::new();
 
-    'running: loop {
-        let line = rl.get_buffer();
+    // source user and system config
+    let mut paths = ConfigPaths::new(&args);
+    paths.source(&interpreter, &mut env, &mut sys);
 
-        // let res = Ast::parse(&line).map(|mut a| interpreter.eval(&mut a, &mut env));
+    let mut l = Line::new();
+
+    println!("Welcome to Rushi!");
+    println!("Type 'exit' to exit.");
+
+
+    'running: loop {
+        let res = l.next_line();
+        let line = match res {
+            Some(b) => b,
+            None => continue,
+        };
+
         let mut ast = Ast::parse(&line, &sys).unwrap();
+        // let opt_code = OpCode::from(ast);
+        // const OPTIMIZATION_LEVEL = 3;
+        // for _ in (0..=OPTIMIZATION_LEVEL) {
+        //     opt_code.reduce();
+        // }
+        // let byte_code = ByteCode::from(opt_code);
         let res = interpreter.eval(&mut ast, &mut env, &mut sys);
 
         match res {

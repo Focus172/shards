@@ -1,6 +1,7 @@
 [workspace]
 members = [
-	# "rushic",
+	"rushi",
+    "zigi",
 	"stardust-lsp",
 	"stardust",
 ]

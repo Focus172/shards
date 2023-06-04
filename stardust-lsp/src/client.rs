@@ -5,19 +5,14 @@ use crate::{
 };
 use lsp_types as lsp;
 use lsp::{
-    OneOf,
-    PositionEncodingKind, WorkspaceFolder, notification::DidChangeWorkspaceFolders, DidChangeWorkspaceFoldersParams, WorkspaceFoldersChangeEvent, Url,
-    ResourceOp::*
+    PositionEncodingKind, WorkspaceFolder, notification::DidChangeWorkspaceFolders, 
+    DidChangeWorkspaceFoldersParams, WorkspaceFoldersChangeEvent, Url,
 };
-use parking_lot::Mutex;
 use serde::Deserialize;
 use serde_json::Value;
 use std::future::Future;
 use std::process::Stdio;
-use std::sync::{
-    atomic::{AtomicU64, Ordering},
-    Arc,
-};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::{collections::HashMap, path::PathBuf};
 use tokio::{
     io::{BufReader, BufWriter},
@@ -30,8 +25,8 @@ use tokio::{
 
 #[derive(Debug)]
 pub struct Client {
-    id: usize,
-    name: String,
+    pub id: usize,
+    pub name: String,
     process: Child,
     server_tx: UnboundedSender<Payload>,
     request_counter: AtomicU64,
@@ -90,7 +85,7 @@ impl Client {
                     uri: root,
                 }
             ]
-        });
+        }).unwrap();
 
         let client = Self {
             id,
@@ -107,14 +102,6 @@ impl Client {
         };
 
         Ok((client, server_rx))
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn id(&self) -> usize {
-        self.id
     }
 
     fn next_request_id(&self) -> jsonrpc::Id {
@@ -556,7 +543,7 @@ impl Client {
         &self,
         uri: lsp::Url,
         version: i32,
-        doc: &Rope,
+        doc: String,
         language_id: String,
     ) -> impl Future<Output = Result<()>> {
         self.notify::<lsp::notification::DidOpenTextDocument>(lsp::DidOpenTextDocumentParams {
@@ -564,164 +551,164 @@ impl Client {
                 uri,
                 language_id,
                 version,
-                text: String::from(doc),
+                text: doc
             },
         })
     }
 
-    pub fn changeset_to_changes(
-        old_text: &Rope,
-        new_text: &Rope,
-        changeset: &ChangeSet,
-        offset_encoding: OffsetEncoding,
-    ) -> Vec<lsp::TextDocumentContentChangeEvent> {
-        let mut iter = changeset.changes().iter().peekable();
-        let mut old_pos = 0;
-        let mut new_pos = 0;
+    // pub fn changeset_to_changes(
+    //     old_text: String,
+    //     new_text: String,
+    //     changeset: String,
+    //     offset_encoding: OffsetEncoding,
+    // ) -> Vec<lsp::TextDocumentContentChangeEvent> {
+    //     let mut iter = changeset.iter().peekable();
+    //     let mut old_pos = 0;
+    //     let mut new_pos = 0;
+    //
+    //     let mut changes = Vec::new();
+    //
+    //     use crate::util::pos_to_lsp_pos;
+    //
+    //     // this is dumb. TextEdit describes changes to the initial doc (concurrent), but
+    //     // TextDocumentContentChangeEvent describes a series of changes (sequential).
+    //     // So S -> S1 -> S2, meaning positioning depends on the previous edits.
+    //     //
+    //     // Calculation is therefore a bunch trickier.
+    //
+    //     fn traverse(
+    //         pos: lsp::Position,
+    //         text: &str,
+    //         offset_encoding: OffsetEncoding,
+    //     ) -> lsp::Position {
+    //         let lsp::Position {
+    //             mut line,
+    //             mut character,
+    //         } = pos;
+    //
+    //         let mut chars = text.chars().peekable();
+    //         while let Some(ch) = chars.next() {
+    //             // LSP only considers \n, \r or \r\n as line endings
+    //             if ch == '\n' || ch == '\r' {
+    //                 // consume a \r\n
+    //                 if ch == '\r' && chars.peek() == Some(&'\n') {
+    //                     chars.next();
+    //                 }
+    //                 line += 1;
+    //                 character = 0;
+    //             } else {
+    //                 character += match offset_encoding {
+    //                     OffsetEncoding::Utf8 => ch.len_utf8() as u32,
+    //                     OffsetEncoding::Utf16 => ch.len_utf16() as u32,
+    //                     OffsetEncoding::Utf32 => 1,
+    //                 };
+    //             }
+    //         }
+    //         lsp::Position { line, character }
+    //     }
+    //
+    //     let old_text = old_text.slice(..);
+    //
+    //     while let Some(change) = iter.next() {
+    //         let len = match change {
+    //             Delete(i) | Retain(i) => *i,
+    //             Insert(_) => 0,
+    //         };
+    //         let mut old_end = old_pos + len;
+    //
+    //         match change {
+    //             Retain(i) => {
+    //                 new_pos += i;
+    //             }
+    //             Delete(_) => {
+    //                 let start = pos_to_lsp_pos(new_text, new_pos, offset_encoding);
+    //                 let end = traverse(start, old_text.slice(old_pos..old_end), offset_encoding);
+    //
+    //                 // deletion
+    //                 changes.push(lsp::TextDocumentContentChangeEvent {
+    //                     range: Some(lsp::Range::new(start, end)),
+    //                     text: "".to_string(),
+    //                     range_length: None,
+    //                 });
+    //             }
+    //             Insert(s) => {
+    //                 let start = pos_to_lsp_pos(new_text, new_pos, offset_encoding);
+    //
+    //                 new_pos += s.chars().count();
+    //
+    //                 // a subsequent delete means a replace, consume it
+    //                 let end = if let Some(Delete(len)) = iter.peek() {
+    //                     old_end = old_pos + len;
+    //                     let end =
+    //                         traverse(start, old_text.slice(old_pos..old_end), offset_encoding);
+    //
+    //                     iter.next();
+    //
+    //                     // replacement
+    //                     end
+    //                 } else {
+    //                     // insert
+    //                     start
+    //                 };
+    //
+    //                 changes.push(lsp::TextDocumentContentChangeEvent {
+    //                     range: Some(lsp::Range::new(start, end)),
+    //                     text: s.to_string(),
+    //                     range_length: None,
+    //                 });
+    //             }
+    //         }
+    //         old_pos = old_end;
+    //     }
+    //
+    //     changes
+    // }
 
-        let mut changes = Vec::new();
-
-        use crate::util::pos_to_lsp_pos;
-
-        // this is dumb. TextEdit describes changes to the initial doc (concurrent), but
-        // TextDocumentContentChangeEvent describes a series of changes (sequential).
-        // So S -> S1 -> S2, meaning positioning depends on the previous edits.
-        //
-        // Calculation is therefore a bunch trickier.
-
-        fn traverse(
-            pos: lsp::Position,
-            text: &str,
-            offset_encoding: OffsetEncoding,
-        ) -> lsp::Position {
-            let lsp::Position {
-                mut line,
-                mut character,
-            } = pos;
-
-            let mut chars = text.chars().peekable();
-            while let Some(ch) = chars.next() {
-                // LSP only considers \n, \r or \r\n as line endings
-                if ch == '\n' || ch == '\r' {
-                    // consume a \r\n
-                    if ch == '\r' && chars.peek() == Some(&'\n') {
-                        chars.next();
-                    }
-                    line += 1;
-                    character = 0;
-                } else {
-                    character += match offset_encoding {
-                        OffsetEncoding::Utf8 => ch.len_utf8() as u32,
-                        OffsetEncoding::Utf16 => ch.len_utf16() as u32,
-                        OffsetEncoding::Utf32 => 1,
-                    };
-                }
-            }
-            lsp::Position { line, character }
-        }
-
-        let old_text = old_text.slice(..);
-
-        while let Some(change) = iter.next() {
-            let len = match change {
-                Delete(i) | Retain(i) => *i,
-                Insert(_) => 0,
-            };
-            let mut old_end = old_pos + len;
-
-            match change {
-                Retain(i) => {
-                    new_pos += i;
-                }
-                Delete(_) => {
-                    let start = pos_to_lsp_pos(new_text, new_pos, offset_encoding);
-                    let end = traverse(start, old_text.slice(old_pos..old_end), offset_encoding);
-
-                    // deletion
-                    changes.push(lsp::TextDocumentContentChangeEvent {
-                        range: Some(lsp::Range::new(start, end)),
-                        text: "".to_string(),
-                        range_length: None,
-                    });
-                }
-                Insert(s) => {
-                    let start = pos_to_lsp_pos(new_text, new_pos, offset_encoding);
-
-                    new_pos += s.chars().count();
-
-                    // a subsequent delete means a replace, consume it
-                    let end = if let Some(Delete(len)) = iter.peek() {
-                        old_end = old_pos + len;
-                        let end =
-                            traverse(start, old_text.slice(old_pos..old_end), offset_encoding);
-
-                        iter.next();
-
-                        // replacement
-                        end
-                    } else {
-                        // insert
-                        start
-                    };
-
-                    changes.push(lsp::TextDocumentContentChangeEvent {
-                        range: Some(lsp::Range::new(start, end)),
-                        text: s.to_string(),
-                        range_length: None,
-                    });
-                }
-            }
-            old_pos = old_end;
-        }
-
-        changes
-    }
-
-    pub fn text_document_did_change(
-        &self,
-        text_document: lsp::VersionedTextDocumentIdentifier,
-        old_text: &Rope,
-        new_text: &Rope,
-        changes: &ChangeSet,
-    ) -> Option<impl Future<Output = Result<()>>> {
-        let capabilities = self.capabilities.get().unwrap();
-
-        // Return early if the server does not support document sync.
-        let sync_capabilities = match capabilities.text_document_sync {
-            Some(
-                lsp::TextDocumentSyncCapability::Kind(kind)
-                | lsp::TextDocumentSyncCapability::Options(lsp::TextDocumentSyncOptions {
-                    change: Some(kind),
-                    ..
-                }),
-            ) => kind,
-            // None | SyncOptions { changes: None }
-            _ => return None,
-        };
-
-        let changes = match sync_capabilities {
-            lsp::TextDocumentSyncKind::FULL => {
-                vec![lsp::TextDocumentContentChangeEvent {
-                    // range = None -> whole document
-                    range: None,        //Some(Range)
-                    range_length: None, // u64 apparently deprecated
-                    text: new_text.to_string(),
-                }]
-            }
-            lsp::TextDocumentSyncKind::INCREMENTAL => {
-                Self::changeset_to_changes(old_text, new_text, changes, self.offset_encoding())
-            }
-            lsp::TextDocumentSyncKind::NONE => return None,
-            kind => unimplemented!("{:?}", kind),
-        };
-
-        Some(self.notify::<lsp::notification::DidChangeTextDocument>(
-            lsp::DidChangeTextDocumentParams {
-                text_document,
-                content_changes: changes,
-            },
-        ))
-    }
+    // pub fn text_document_did_change(
+    //     &self,
+    //     text_document: lsp::VersionedTextDocumentIdentifier,
+    //     old_text: &Rope,
+    //     new_text: &Rope,
+    //     changes: &ChangeSet,
+    // ) -> Option<impl Future<Output = Result<()>>> {
+    //     let capabilities = self.capabilities.get().unwrap();
+    //
+    //     // Return early if the server does not support document sync.
+    //     let sync_capabilities = match capabilities.text_document_sync {
+    //         Some(
+    //             lsp::TextDocumentSyncCapability::Kind(kind)
+    //             | lsp::TextDocumentSyncCapability::Options(lsp::TextDocumentSyncOptions {
+    //                 change: Some(kind),
+    //                 ..
+    //             }),
+    //         ) => kind,
+    //         // None | SyncOptions { changes: None }
+    //         _ => return None,
+    //     };
+    //
+    //     let changes = match sync_capabilities {
+    //         lsp::TextDocumentSyncKind::FULL => {
+    //             vec![lsp::TextDocumentContentChangeEvent {
+    //                 // range = None -> whole document
+    //                 range: None,        //Some(Range)
+    //                 range_length: None, // u64 apparently deprecated
+    //                 text: new_text.to_string(),
+    //             }]
+    //         }
+    //         lsp::TextDocumentSyncKind::INCREMENTAL => {
+    //             Self::changeset_to_changes(old_text, new_text, changes, self.offset_encoding())
+    //         }
+    //         lsp::TextDocumentSyncKind::NONE => return None,
+    //         kind => unimplemented!("{:?}", kind),
+    //     };
+    //
+    //     Some(self.notify::<lsp::notification::DidChangeTextDocument>(
+    //         lsp::DidChangeTextDocumentParams {
+    //             text_document,
+    //             content_changes: changes,
+    //         },
+    //     ))
+    // }
 
     pub fn text_document_did_close(
         &self,
@@ -737,7 +724,7 @@ impl Client {
     pub fn text_document_did_save(
         &self,
         text_document: lsp::TextDocumentIdentifier,
-        text: &Rope,
+        text: String,
     ) -> Option<impl Future<Output = Result<()>>> {
         let capabilities = self.capabilities.get().unwrap();
 
