@@ -125,9 +125,9 @@ pub struct AutoClosePipes {
     pub write: AutoCloseFd,
 }
 
-/// Construct a pair of connected pipes, set to close-on-exec.
-/// \return None on fd exhaustion.
-pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
+// /// Construct a pair of connected pipes, set to close-on-exec.
+// /// \return None on fd exhaustion.
+// pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
 
     // int pipes[2] = {-1, -1};
     //
@@ -149,19 +149,19 @@ pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
     // write_end = heightenize_fd(std::move(write_end), already_cloexec);
     // if (!write_end.valid()) return none();
 
-    let readp = AutoCloseFd::new(pipes.read);
-    let writep = AutoCloseFd::new(pipes.write);
-    if !readp.is_valid() || !writep.is_valid() {
-        None
-    } else {
-        Some(AutoClosePipes {
-            read: readp,
-            write: writep,
-        })
-    }
-}
+//     let readp = AutoCloseFd::new(pipes.read);
+//     let writep = AutoCloseFd::new(pipes.write);
+//     if !readp.is_valid() || !writep.is_valid() {
+//         None
+//     } else {
+//         Some(AutoClosePipes {
+//             read: readp,
+//             write: writep,
+//         })
+//     }
+// }
 
-/// Narrow versions of wopen_cloexec.
+/// creates a file that is told to 
 pub fn open_cloexec(path: &CStr, flags: i32, mode: libc::c_int) -> RawFd {
     unsafe { libc::open(path.as_ptr(), flags | O_CLOEXEC, mode) }
 }
@@ -176,3 +176,4 @@ pub fn exec_close(fd: RawFd) {
         }
     }
 }
+

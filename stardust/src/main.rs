@@ -4,7 +4,8 @@ mod env;
 mod interpreter;
 mod line;
 // mod abbrs;
-// mod pipes;
+mod pipes;
+mod exec;
 
 use crate::{
     ast::Ast,
@@ -95,9 +96,7 @@ impl RushiArgs {
         // We are an interactive session if we have not been given an explicit
         // command or file to execute and stdin is a tty. Note that the -i or
         // --interactive options also force interactive mode.
-        if self.batch_cmds.is_none() {
-            // stdin().lines().is_none()
-            // && is a tty
+        if self.batch_cmds.is_none() && atty::is(atty::Stream::Stdin) {
             self.is_interactive_session = true;
         }
     }
