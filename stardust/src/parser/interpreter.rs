@@ -1,4 +1,4 @@
-use crate::{env::{UserState, SystemState}, ast::Ast};
+use crate::prelude::*;
 
 pub struct Interpreter {}
 
@@ -7,24 +7,28 @@ impl Interpreter {
         Interpreter {}
     }
 
-    pub fn eval(&self, ast: &mut Ast, _env: &mut UserState, _sys: &mut SystemState) -> anyhow::Result<()> {
+    pub fn eval(&self, bytes: ByteCode, _env: &mut UserState) -> Result<()> {
 
-        match ast.next().unwrap() {
-            "exit" => return Err(anyhow::anyhow!("exit")),
-            "echo" => {
-                println!("{}", ast.get_args().join(" "));
-                return Ok(());
-            },
-            "set" => {
-                // let args = ast.get_args();
-                // builtins::set(key, args)
-            },
-            l if l.contains('=') => {
-                // let (key, val) = l.split_once('=').unwrap();
-                // builtins::set(key, val, env)
-            }
-            _ => {}
-        };
+        // match ast.next().unwrap() {
+        //     "exit" => return Err(anyhow::anyhow!("exit")),
+        //     "echo" => {
+        //         println!("{}", ast.get_args().join(" "));
+        //         return Ok(());
+        //     },
+        //     "set" => {
+        //         // let args = ast.get_args();
+        //         // builtins::set(key, args)
+        //     },
+        //     // p if p.is_path() => {
+        //     //     // try to run the program
+        //     //
+        //     // }
+        //     l if l.contains('=') => {
+        //         // let (key, val) = l.split_once('=').unwrap();
+        //         // builtins::set(key, val, env)
+        //     }
+        //     _ => {}
+        // };
 
 
             /*
@@ -60,6 +64,6 @@ impl Interpreter {
             log::info!("{}", String::from_utf8_lossy(&info.stderr));
             */
 
-        Err(anyhow::anyhow!("Function should have returned by now"))
+        Err(anyhow::anyhow!("Function should have returned by now").into())
     }
 }

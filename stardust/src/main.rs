@@ -1,23 +1,22 @@
-mod ast;
+// mod builtins;
 mod config;
 mod env;
-mod interpreter;
-mod line;
-// mod abbrs;
+mod parser;
 mod pipes;
-mod exec;
+// mod exec;
+mod prelude;
 
-use crate::{
-    ast::Ast,
-    config::ConfigPaths,
-    env::{SystemState, UserState},
-    interpreter::Interpreter,
-    line::Line,
+use std::{
+    fs::File, path::PathBuf
 };
-use anyhow::Result;
-use clap::Parser;
-use std::{fs::File, path::PathBuf};
 
+use crate::config::line::Line;
+use crate::prelude::*;
+
+const OPTIMIZATION_LEVEL: u8 = 3;
+
+
+use clap::Parser;
 /// A Shell to oxidize your terminal
 #[derive(Parser, Debug)]
 #[clap(
@@ -77,7 +76,7 @@ pub struct RushiArgs {
 }
 
 impl RushiArgs {
-    fn imply_args(&mut self) {
+    fn imply_args(mut self) -> Self {
         // if the first argument starts with a dash, we are a login shell
         if std::env::args().take(1).any(|arg| arg.starts_with('-')) {
             self.is_login = true;
@@ -99,6 +98,8 @@ impl RushiArgs {
         if self.batch_cmds.is_none() && atty::is(atty::Stream::Stdin) {
             self.is_interactive_session = true;
         }
+
+        self
     }
 }
 
@@ -114,8 +115,7 @@ fn main() -> ! {
 
 #[tokio::main]
 async fn rushi() -> Result<()> {
-    let mut args = RushiArgs::parse();
-    args.imply_args();
+    let args = RushiArgs::parse().imply_args();
 
     if args.debug {
         simplelog::WriteLogger::init(
@@ -132,14 +132,17 @@ async fn rushi() -> Result<()> {
 
     // setlocale(LC_ALL, "");
 
-    let mut env = UserState::new(&args);
-    let mut sys = SystemState::new(&env);
 
     let interpreter = Interpreter::new();
 
+    // TODO: better implementation is to build config from args then env 
+    // from the config
+
     // source user and system config
-    let mut paths = ConfigPaths::new(&args);
-    paths.source(&interpreter, &mut env, &mut sys);
+    // let mut paths = ConfigPaths::new(&args);
+    // paths.source(&interpreter, &mut env, &mut sys);
+
+    let mut env = UserState::new(&args);
 
     let mut l = Line::new();
 
@@ -150,28 +153,15 @@ async fn rushi() -> Result<()> {
     // lsp.initialize(true).await?;
 
     'running: loop {
-        let res = l.next_line();
-        let line = match res {
-            Some(b) => b,
-            None => continue,
-        };
+        let line = l.next_line().unwrap();
 
-        let mut ast = Ast::parse(&line, &sys).unwrap();
-        // let opt_code = OpCode::from(ast);
-        // const OPTIMIZATION_LEVEL = 3;
-        // for _ in (0..=OPTIMIZATION_LEVEL) {
-        //     opt_code.reduce();
-        // }
-        // let byte_code = ByteCode::from(opt_code);
-        let res = interpreter.eval(&mut ast, &mut env, &mut sys);
+        let ast = Ast::parse(&line).unwrap();
+        let mut optc = OpCode::from(ast);
+        for _ in 0..=OPTIMIZATION_LEVEL { optc.reduce(); }
+        let bytes = ByteCode::from(optc);
 
-        match res {
-            Ok(_) => {}
-            Err(e) => {
-                eprintln!("Error: {}", e);
-                break 'running;
-            }
-        }
+        let res = interpreter.eval(bytes, &mut env);
+        res.unwrap(); // this will do until error handling is needed
     }
 
     // restore_term_mode();

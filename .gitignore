@@ -5,3 +5,4 @@ history.txt
 # fish code to be adapted
 stardust/src/builtins
 stardust/src/env
+bacon.toml

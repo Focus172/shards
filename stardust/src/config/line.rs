@@ -12,7 +12,6 @@ pub struct Line {
 
 impl Line {
     pub fn new() -> Line {
-        let mut insert = reedline::default_vi_insert_keybindings();
 
         let commands = vec![
             "test".into(),
@@ -24,6 +23,8 @@ impl Line {
         let completer = Box::new(DefaultCompleter::new_with_wordlen(commands.clone(), 2));
         let completion_menu = Box::new(ColumnarMenu::default().with_name("completion_menu"));
 
+
+        let mut insert = reedline::default_vi_insert_keybindings();
         insert.add_binding(
             KeyModifiers::NONE,
             KeyCode::Tab,
@@ -40,10 +41,10 @@ impl Line {
                 insert,
                 reedline::default_vi_normal_keybindings(),
             )))
-            .with_history(Box::new(
-                FileBackedHistory::with_file(5, "history.txt".into())
-                    .expect("Error configuring history with file"),
-            ))
+            // .with_history(Box::new(
+            //     FileBackedHistory::with_file(5, "history.txt".into())
+            //         .expect("Error configuring history with file"),
+            // ))
             .with_highlighter(Box::new(ExampleHighlighter::new(commands)))
             .with_completer(completer)
             .with_menu(ReedlineMenu::EngineCompleter(completion_menu))
