@@ -1,8 +1,6 @@
 target
 refs
-history.txt
 
 # fish code to be adapted
-stardust/src/builtins
-stardust/src/env
-bacon.toml
+shards/src/builtins
+shards/src/env

@@ -1,6 +1,50 @@
-# Rushi
+# Shards
 
-### _Note: none of this is implemented :)_
+Shards is a shell framwork that aims to unify different langauges and put make 
+them user shells. Shards will allow for most scripting langauges to have acsess
+to the same resources as a shell would as long as it is passed a valid op-code.
+It is left up to implementation for who each language chooses to implement this 
+but there are two in this repo as examples:
+    - Stardust (the zig interactive shell)
+    - Rushi (rustc with spice)
+
+
+## Parsing
+
+The code uses a trimmed version of rustc to compile your code to an AST (abstract syntax tree).
+The AST is then passed to an interpreter which runs it. When you call a meathod the interpreter
+checks for this (in order):
+    - 1. is it a builtin meathod
+    - 2. is it a part of coreutils package (optional dependency)
+    - 3. is it there an .rlib in your rpath with that name
+    - 4. is it in your PATH 
+    - 5. interpreting as string (in some contexts)
+    - 6. error
+
+## Piping
+
+When chaining operation is chained it will default to using a rust iterator over a pipe if it is 
+supported. If not then it will fall back on a traditional unix pipe. Iterators provide args as 
+they recive them and all process run in parelell. A long time in the fueture there is a goal to 
+run code until it request the next unready arg.
+
+
+## Goals
+
+The main goal of rushi is to be dumb and have a bit of a giggle. However secondary, there is a 
+goal that by knowing rust you can do everything on a computer and this is the next step in that.
+I don't want this to be something that just marginally changes things like nuShell or fish and 
+ends up feeling luke warm. This project is dumb is proud of it.
+
+## Notes
+
+I talked with a few people and asked them something along the lines of "if using a terminal was 
+easy and you knew it was faster would you use it?" and all of them responded with no. This means 
+that people are just dumb and as such there no reason to appeal to normies and make stuff "nice"
+or "friendly". As such this shell is designed to be evil. 
+
+
+# Rushi
 
 Rushi is an esoteric shell that aims to replace reasonable scripting langauges with rust, a 
 syntax heavy language for systems and not 1 liners.
@@ -27,38 +71,6 @@ cat(code.ls(-a1).fzf(-i -m)).tail
 
 So much better right?
 
-## Parsing
+# Stardust
 
-The code uses a trimmed version of rustc to compile your code to an AST (abstract syntax tree).
-The AST is then passed to an interpreter which runs it. When you call a meathod the interpreter
-checks for this (in order):
-    - 1. is it a builtin meathod
-    - 2. is it a part of coreutils package (optional dependency)
-    - 3. is it there an .rlib in your rpath with that name
-    - 4. is it in your PATH 
-    - 5. interpreting as string (in some contexts)
-    - 6. error
-
-# Piping
-
-When chaining operation is chained it will default to using a rust iterator over a pipe if it is 
-supported. If not then it will fall back on a traditional unix pipe. Iterators provide args as 
-they recive them and all process run in parelell. A long time in the fueture there is a goal to 
-run code until it request the next unready arg.
-
-
-## Goals
-
-The main goal of rushi is to be dumb and have a bit of a giggle. However secondary, there is a 
-goal that by knowing rust you can do everything on a computer and this is the next step in that.
-I don't want this to be something that just marginally changes things like nuShell or fish and 
-ends up feeling luke warm. This project is dumb is proud of it.
-
-## Notes
-
-I talked with a few people and asked them something along the lines of "if using a terminal was 
-easy and you knew it was faster would you use it?" and all of them responded with no. This means 
-that people are just dumb and as such there no reason to appeal to normies and make stuff "nice"
-or "friendly". As such this shell is designed to be evil. 
-
-## In addtion it also aims to support zig for easy/native c interop 
+The zig shell that does things

@@ -1,7 +1,2 @@
 [workspace]
-members = [
-	"rushi",
-    "zigi",
-	"stardust-lsp",
-	"stardust",
-]
+members = ["rushi", "stardust", "shards-lsp", "shards"]
