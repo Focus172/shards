@@ -1,2 +1,0 @@
-[workspace]
-members = ["rushi", "stardust", "shards-lsp", "shards"]

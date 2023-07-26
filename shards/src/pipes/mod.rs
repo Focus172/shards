@@ -1,7 +1,7 @@
-//! Stardust's piping features. 
+//! Stardust's piping features.
 //! defaults to unix pipes when not avalable.
 
-mod streams;
 mod fds;
+mod streams;
 
 pub use fds::open_cloexec;

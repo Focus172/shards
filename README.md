@@ -43,6 +43,12 @@ easy and you knew it was faster would you use it?" and all of them responded wit
 that people are just dumb and as such there no reason to appeal to normies and make stuff "nice"
 or "friendly". As such this shell is designed to be evil. 
 
+## Interface
+
+Shards handles reading input from the user. It then calls the parse function of
+the backend and expects to have an ast returned the language including a shell 
+command primative which will run a binary. Shards will handle all the optimizations 
+and running of your ast and you only have to supply a valid one.
 
 # Rushi
 

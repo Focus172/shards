@@ -3,8 +3,11 @@
 //! Some of the code in this file is based on code from the Glibc manual, though the changes
 //! performed have been massive.
 
-use std::{io::Read, ffi::{CString, CStr}};
 use nix::errno::Errno;
+use std::{
+    ffi::{CStr, CString},
+    io::Read,
+};
 
 /// Number of calls to fork() or posix_spawn().
 // static fork_count: RelaxedAtomic<usize> = 0;
@@ -76,8 +79,8 @@ fn is_thompson_shell_script(path: &str) -> bool {
         return false;
     }
 
-    let file = std::fs::File::open(path);
-    if let Ok(f) = file {
+    let mut file = std::fs::File::open(path);
+    if let Ok(mut f) = file {
         let mut buf = [0; 256];
         let read = f.read(&mut buf).unwrap();
         drop(f);
@@ -101,8 +104,14 @@ fn safe_launch_process(p: Process, actual_cmd: &str, cargv: &[&str], cenvv: &[&s
     let cmd = actual_cmd.clone();
 
     let c_cmd = CString::new(actual_cmd).unwrap();
-    let c_argv: Vec<&CStr> = cargv.iter().map(|s| CString::new(*s).unwrap().as_ref()).collect();
-    let c_envv: Vec<&CStr> = cenvv.iter().map(|s| CString::new(*s).unwrap().as_ref()).collect();
+    let c_argv: Vec<&CStr> = cargv
+        .iter()
+        .map(|s| CString::new(*s).unwrap().as_ref())
+        .collect();
+    let c_envv: Vec<&CStr> = cenvv
+        .iter()
+        .map(|s| CString::new(*s).unwrap().as_ref())
+        .collect();
     let res = nix::unistd::execve(&c_cmd, &c_argv, &c_envv);
 
     let errno = match res {
@@ -121,15 +130,15 @@ fn safe_launch_process(p: Process, actual_cmd: &str, cargv: &[&str], cenvv: &[&s
 
         let interp = _PATH_BSHELL;
         let mut new_args = vec![
-            interp, 
+            interp,
             argv.into_iter().take(maxargs).map(|c| *c).collect(),
-            "\0"
+            "\0",
         ];
 
-            // The command to call should use the full path,
-            // not what we would pass as argv0.
-            argv2[1] = cmd;
-            nix::unistd::execve(_PATH_BSHELL, argv2, envv);
+        // The command to call should use the full path,
+        // not what we would pass as argv0.
+        argv2[1] = cmd;
+        nix::unistd::execve(_PATH_BSHELL, argv2, envv);
     }
 
     loop {}

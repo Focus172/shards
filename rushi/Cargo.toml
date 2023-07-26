@@ -7,4 +7,6 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-syn = { version = "2.0.18", features = ["full", "extra-traits"] }
+shards-types = { path = "../shards-types" }
+syn = { version = "2", features = ["full", "extra-traits"] }
+libc = "0.2"

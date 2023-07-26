@@ -2,7 +2,6 @@ use std::os::fd::RawFd;
 
 use super::fds::AutoCloseFd;
 
-
 pub struct Streams {
     pub out: AutoCloseFd,
     pub err: AutoCloseFd,
@@ -25,6 +24,3 @@ impl Streams {
         todo!()
     }
 }
-
-
-

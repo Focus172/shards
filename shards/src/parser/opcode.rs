@@ -1,5 +1,5 @@
-//! the main logic of the starship thing 
-//! the two main points of interest anre the from meathod that walks the ast 
+//! the main logic of the starship thing
+//! the two main points of interest anre the from meathod that walks the ast
 //! and the reduce meathod that removes unessisary memory copies
 
 use crate::prelude::*;
@@ -10,16 +10,13 @@ pub struct OpCode {
 
 impl From<Ast> for OpCode {
     fn from(ast: Ast) -> Self {
-        OpCode {
-            ops: Vec::new()
-        }
+        dbg!(ast);
+        OpCode { ops: Vec::new() }
     }
 }
 
 impl OpCode {
-    pub fn reduce(&mut self) {
-
-    }
+    pub fn reduce(&mut self) {}
 }
 
 pub struct Operation {
@@ -37,17 +34,17 @@ enum Argument {
     Number(f64),
     String(String),
     Bool(bool),
-    Table(Table)
+    Table(Table),
 }
 
 struct Table {
-    members: Vec<Value>
+    members: Vec<Value>,
 }
 
 enum Value {
     KeyValue(Pair),
     Array(Vec<Argument>),
-    Literal(Argument)
+    Literal(Argument),
 }
 
 struct Pair {

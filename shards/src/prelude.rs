@@ -1,10 +1,6 @@
-
 // Rexports of the common untilites of the crate
-pub use crate::{
-    // config::ConfigPaths,
-    env::UserState,
-    parser::*,
-};
+pub use crate::{config::ConfigPaths, env::UserState, parser::*};
+pub use shards_types::Ast;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -28,8 +24,8 @@ impl From<anyhow::Error> for Error {
     }
 }
 
-impl From<log::SetLoggerError> for Error {
-    fn from(e: log::SetLoggerError) -> Self {
-        Self::Static(e.into())        
-    }
-}
+// impl From<log::SetLoggerError> for Error {
+//     fn from(e: log::SetLoggerError) -> Self {
+//         Self::Static(e.into())
+//     }
+// }

@@ -1,9 +1,9 @@
 mod ast;
+mod bytecode;
 mod interpreter;
 mod opcode;
-mod bytecode;
 
-pub use ast::Ast;
+pub use ast::FromExternalAst;
+pub use bytecode::ByteCode;
 pub use interpreter::Interpreter;
 pub use opcode::OpCode;
-pub use bytecode::ByteCode;

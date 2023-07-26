@@ -1,22 +1,24 @@
 // mod builtins;
 mod config;
 mod env;
+// mod exec;
 mod parser;
 mod pipes;
-// mod exec;
 mod prelude;
 
 use std::{
-    fs::File, path::PathBuf
+    fs::File,
+    io::{stdin, BufRead},
+    path::PathBuf,
 };
 
-use crate::config::line::Line;
+// use crate::config::line::Line;
 use crate::prelude::*;
 
 const OPTIMIZATION_LEVEL: u8 = 3;
 
-
 use clap::Parser;
+
 /// A Shell to oxidize your terminal
 #[derive(Parser, Debug)]
 #[clap(
@@ -126,16 +128,16 @@ async fn rushi() -> Result<()> {
                     .clone()
                     .unwrap_or_else(|| PathBuf::from("rushi.log")),
             )?,
-        )?;
+        )
+        .expect("Failed to start logger");
         log::info!("Debug mode enabled");
     }
 
     // setlocale(LC_ALL, "");
 
-
     let interpreter = Interpreter::new();
 
-    // TODO: better implementation is to build config from args then env 
+    // TODO: better implementation is to build config from args then env
     // from the config
 
     // source user and system config
@@ -144,7 +146,8 @@ async fn rushi() -> Result<()> {
 
     let mut env = UserState::new(&args);
 
-    let mut l = Line::new();
+    // let mut l = Line::new();
+    let mut l = stdin().lock();
 
     println!("Welcome to Rushi!");
     println!("Type 'exit' to exit.");
@@ -153,15 +156,23 @@ async fn rushi() -> Result<()> {
     // lsp.initialize(true).await?;
 
     'running: loop {
-        let line = l.next_line().unwrap();
+        // let line = l.next_line().unwrap();
+        let mut line = String::new();
+        _ = l.read_line(&mut line);
 
         let ast = Ast::parse(&line).unwrap();
         let mut optc = OpCode::from(ast);
-        for _ in 0..=OPTIMIZATION_LEVEL { optc.reduce(); }
+        for _ in 0..=OPTIMIZATION_LEVEL {
+            optc.reduce();
+        }
         let bytes = ByteCode::from(optc);
 
         let res = interpreter.eval(bytes, &mut env);
-        res.unwrap(); // this will do until error handling is needed
+
+        match res {
+            Ok(_) => {}
+            Err(_) => break 'running,
+        }
     }
 
     // restore_term_mode();

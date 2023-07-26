@@ -82,7 +82,7 @@ impl AutoCloseFd {
 
     // Create a new AutoCloseFd instance taking ownership of the passed fd
     pub fn new(fd: RawFd) -> Self {
-        AutoCloseFd { fd } 
+        AutoCloseFd { fd }
     }
 
     // Create a new AutoCloseFd without an open fd
@@ -129,25 +129,25 @@ pub struct AutoClosePipes {
 // /// \return None on fd exhaustion.
 // pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
 
-    // int pipes[2] = {-1, -1};
-    //
-    // bool already_cloexec = false;
-    // if (pipe2(pipes, O_CLOEXEC) < 0) {
-    //     FLOGF(warning, PIPE_ERROR);
-    //     wperror(L"pipe2");
-    //     return none();
-    // }
-    // already_cloexec = true;
-    //
-    // autoclose_fd_t read_end{pipes[0]};
-    // autoclose_fd_t write_end{pipes[1]};
-    //
-    // // Ensure our fds are out of the user range.
-    // read_end = heightenize_fd(std::move(read_end), already_cloexec);
-    // if (!read_end.valid()) return none();
-    //
-    // write_end = heightenize_fd(std::move(write_end), already_cloexec);
-    // if (!write_end.valid()) return none();
+// int pipes[2] = {-1, -1};
+//
+// bool already_cloexec = false;
+// if (pipe2(pipes, O_CLOEXEC) < 0) {
+//     FLOGF(warning, PIPE_ERROR);
+//     wperror(L"pipe2");
+//     return none();
+// }
+// already_cloexec = true;
+//
+// autoclose_fd_t read_end{pipes[0]};
+// autoclose_fd_t write_end{pipes[1]};
+//
+// // Ensure our fds are out of the user range.
+// read_end = heightenize_fd(std::move(read_end), already_cloexec);
+// if (!read_end.valid()) return none();
+//
+// write_end = heightenize_fd(std::move(write_end), already_cloexec);
+// if (!write_end.valid()) return none();
 
 //     let readp = AutoCloseFd::new(pipes.read);
 //     let writep = AutoCloseFd::new(pipes.write);
@@ -161,7 +161,7 @@ pub struct AutoClosePipes {
 //     }
 // }
 
-/// creates a file that is told to 
+/// creates a file that is told to
 pub fn open_cloexec(path: &CStr, flags: i32, mode: libc::c_int) -> RawFd {
     unsafe { libc::open(path.as_ptr(), flags | O_CLOEXEC, mode) }
 }
@@ -176,4 +176,3 @@ pub fn exec_close(fd: RawFd) {
         }
     }
 }
-
