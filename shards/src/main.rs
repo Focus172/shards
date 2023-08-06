@@ -130,6 +130,7 @@ async fn rushi() -> Result<()> {
             )?,
         )
         .expect("Failed to start logger");
+
         log::info!("Debug mode enabled");
     }
 

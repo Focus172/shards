@@ -7,10 +7,10 @@
 //! then convert it to the other. Other languages can either use the interface
 //! directly or to use a package that abstracts this interface.
 
-/// The raw bindings to the expected ast format
+/// The idomatic rust abstraction over the raw ast
 pub mod external;
 
-/// The idomatic rust abstraction over the raw ast
+/// The raw bindings to the expected ast format
 pub mod internal;
 
 /// A short set of imports that may be usefult when working with this library

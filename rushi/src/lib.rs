@@ -51,10 +51,11 @@ pub fn parse_safe(s: &str) -> Ast {
     // this needs to leak otherwise it is a segfault
     // Token::Identifier(Identifier::Literal { value: todo!()}),
 
-    let tokens = vec![
-        Token::Operation(Operation::ScriptCall),
-        Token::Operation(Operation::ScriptCall),
+    let mut tokens = vec![
+        Token::Operation(Operation::ScriptCall("ls".into())),
+        Token::Operation(Operation::ScriptCall("ls".into())),
     ];
+    tokens.shrink_to_fit();
 
     Ast { tokens }
 }

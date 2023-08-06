@@ -4,3 +4,5 @@ libs/
 shards-lsp/
 rushi.log
 refs/
+stardust/zig-cache
+stardust/zig-out

@@ -1,4 +1,4 @@
-use crate::internal::ShardsAst;
+use crate::internal::{ShardsAst, ShardsIdentifier, ShardsOperation, ShardsToken};
 
 #[derive(Debug)]
 pub struct Ast {
@@ -8,8 +8,19 @@ pub struct Ast {
 }
 
 impl Ast {
-    pub fn into_shards_ast(self) -> ShardsAst {
-        let data = self.tokens.leak();
+    /// Turns a valid ast into a an ast that can pass properly pass through
+    /// library boundieres.
+    ///
+    /// # Safety
+    /// Leaks the tokens of this ast. The person who recives the ast after this
+    /// is responsible for freeing the memory.
+    pub unsafe fn into_shards_ast(self) -> ShardsAst {
+        let data = self
+            .tokens
+            .iter()
+            .map(|tok| tok.into())
+            .collect::<Vec<ShardsToken>>()
+            .leak();
         ShardsAst {
             is_valid: true,
             number_of_tokens: data.len(),
@@ -24,6 +35,15 @@ pub enum Token {
     Operation(Operation),
 }
 
+impl Into<ShardsToken> for Token {
+    fn into(self) -> ShardsToken {
+        match self {
+            Self::Identifier(ident) => ShardsToken::Identifier(ident.into()),
+            Self::Operation(op) => ShardsToken::Operation(op.into()),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum Identifier {
     Variable {
@@ -33,6 +53,47 @@ pub enum Identifier {
     Literal {
         value: Value,
     },
+}
+
+impl Into<ShardsIdentifier> for Identifier {
+    fn into(self) -> ShardsIdentifier {
+        match self {
+            Self::Variable { variable_type } => ShardsIdentifier::Variable {
+                variable_type: variable_type.into(),
+            },
+            Self::Literal { value } => ShardsIdentifier::Literal {
+                value: value.into(),
+            },
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum Operation {
+    /// A script to call passed as its raw parts
+    ScriptCall {
+        name: String, /* args: Vec<String> */
+    },
+    Add,
+    Subtract,
+    Multiply,
+}
+
+impl Into<ShardsOperation> for Operation {
+    fn into(self) -> ShardsOperation {
+        match self {
+            Self::ScriptCall { name } => {
+                let data = name.leak();
+                ShardsOperation::ScriptCall {
+                    ptr: data.as_ptr(),
+                    len: data.len(),
+                }
+            }
+            Self::Add => ShardsOperation::Add,
+            Self::Subtract => ShardsOperation::Subtract,
+            Self::Multiply => ShardsOperation::Multiply,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -54,12 +115,4 @@ pub enum Type {
     I64,
     // String,
     // Array(Type),
-}
-
-#[derive(Debug)]
-pub enum Operation {
-    ScriptCall,
-    Add,
-    Subtract,
-    Multiply,
 }

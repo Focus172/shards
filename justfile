@@ -1,5 +1,6 @@
 home := justfile_directory()
 rushi := home / "rushi"
+stardust := home / "stardust"
 shards := home / "shards"
 shards-types := home/ "shards-types"
 
@@ -18,6 +19,9 @@ default: build
 build:
 	cargo build --manifest-path '{{rushi}}/Cargo.toml'
 	cp "{{rushi}}/target/debug/librushi.{{ext}}" "{{home}}/libs/"
+	# zig build --build-file {{stardust}}/build.zig
+	# TODO: convert .a file to so
+	# cp "{{stardust}}/zig-out/lib/libstardust.{{ext}}" "{{home}}/libs/"
 	cargo build --manifest-path '{{shards}}/Cargo.toml'
 
 # Builds and stores all the modules in release mode
