@@ -5,12 +5,32 @@
 use crate::prelude::*;
 
 pub struct OpCode {
-    ops: Vec<Operation>,
+    pub ops: Vec<OpcodeOperation>,
 }
 
 impl From<Ast> for OpCode {
     fn from(ast: Ast) -> Self {
+        //     for tok in ast.tokens {
+        //         match tok {
+        //             Token::Identifier(i) => match i {
+        //                 Identifier::Variable {
+        //                     // name,
+        //                     variable_type,
+        //                 } => {
+        //                     // println!("var_name: {}", name);
+        //                 }
+        //                 _ => {}
+        //             },
+        //             Token::Operation(o) => match o {
+        //                 Operation::ScriptCall => {
+        //                     log::info!("Found a script call");
+        //                 }
+        //                 _ => {}
+        //             },
+        //         }
+        //     }
         dbg!(ast);
+
         OpCode { ops: Vec::new() }
     }
 }
@@ -19,35 +39,35 @@ impl OpCode {
     pub fn reduce(&mut self) {}
 }
 
-pub struct Operation {
-    command: Command,
-    arg1: Argument,
-    arg2: Option<Argument>,
+pub struct OpcodeOperation {
+    pub command: Command,
+    pub arg1: Argument,
+    pub arg2: Option<Argument>,
 }
 
-enum Command {
+pub enum Command {
     Add,
     Subtract,
 }
 
-enum Argument {
+pub enum Argument {
     Number(f64),
     String(String),
     Bool(bool),
     Table(Table),
 }
 
-struct Table {
-    members: Vec<Value>,
+pub struct Table {
+    pub members: Vec<Value>,
 }
 
-enum Value {
+pub enum Value {
     KeyValue(Pair),
     Array(Vec<Argument>),
     Literal(Argument),
 }
 
-struct Pair {
+pub struct Pair {
     key: Argument,
     value: Argument,
 }

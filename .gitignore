@@ -1,10 +1,6 @@
 # build artifacts
 target/
 libs/
-
-# fish code to be adapted
-shards/src/builtins
-shards/src/env
-
-# testing to see if i can hack in an existing framework
+shards-lsp/
+rushi.log
 refs/

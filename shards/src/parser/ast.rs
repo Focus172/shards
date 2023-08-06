@@ -35,12 +35,12 @@ pub trait FromExternalAst {
     fn parse(s: &str) -> Option<Ast>;
 }
 
-type ParseFunc = fn(*const u8) -> Ast;
+type ParseFunc = fn(*const u8) -> ShardsAst;
 
 impl FromExternalAst for Ast {
     fn parse(s: &str) -> Option<Ast> {
         let crate_path = env!("PWD");
-        let library_path = format!("{}/{}", crate_path, "libs/librushi.dylib");
+        let library_path = format!("{}/{}", crate_path, "libs/librushi.so");
         println!("Loading add() from {}", library_path);
 
         let ast = unsafe {
@@ -51,12 +51,7 @@ impl FromExternalAst for Ast {
             func(ptr)
         };
 
-        if ast.is_valid {
-            Some(ast)
-        } else {
-            None
-        }
-        // dbg!(ast);
+        ast.into_ast()
 
         // let parse = format!(
         //     "fn main() {{

@@ -1,10 +1,9 @@
 //! A library for parsing and manipulating Rust source code
 //! into a ast a general ast.
 
-use shards_types::Ast;
-
 use libc::c_char;
-use std::ffi::CStr;
+use shards_types::prelude::*;
+use std::{ffi::CStr, ptr::null};
 
 /// Main external entry point for the library, this is used by non-rust and
 /// dynamic contexts.
@@ -14,15 +13,26 @@ use std::ffi::CStr;
 /// responsible for assuming that the value pased into here is never mutated
 /// as is assumed to be dropped.
 #[no_mangle]
-pub unsafe extern "C" fn parse(s: *const c_char) -> Ast {
+pub unsafe extern "C" fn parse(s: *const c_char) -> ShardsAst {
     let c_str = unsafe {
         assert!(!s.is_null());
 
         CStr::from_ptr(s)
     };
 
-    let r_str = c_str.to_str().unwrap();
-    parse_safe(r_str)
+    let r_str = match c_str.to_str() {
+        Ok(str) => str,
+        Err(e) => {
+            eprint!("parse error: {e}");
+            return ShardsAst {
+                is_valid: false,
+                number_of_tokens: 0,
+                tokens: null(),
+            };
+        }
+    };
+
+    parse_safe(r_str).into_shards_ast()
 }
 
 /// Main entry point to the function when working in safe-rust. This is for if
@@ -38,8 +48,13 @@ pub fn parse_safe(s: &str) -> Ast {
     // Debug impl is available if Syn is built with "extra-traits" feature.
     // println!("{:#?}", syntax);
 
-    Ast {
-        is_valid: true,
-        // string: s,
-    }
+    // this needs to leak otherwise it is a segfault
+    // Token::Identifier(Identifier::Literal { value: todo!()}),
+
+    let tokens = vec![
+        Token::Operation(Operation::ScriptCall),
+        Token::Operation(Operation::ScriptCall),
+    ];
+
+    Ast { tokens }
 }

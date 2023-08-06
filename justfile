@@ -39,8 +39,8 @@ clippy:
 	cargo clippy --manifest-path '{{shards}}/Cargo.toml'
 
 # Runs the code
-run: build
-	cargo run --manifest-path '{{shards}}/Cargo.toml'
+run args="": build
+	cargo run --manifest-path '{{shards}}/Cargo.toml' -- {{args}}
 
 # Runs the code with optimizations enabled
 run-release: build-release
