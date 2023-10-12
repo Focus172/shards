@@ -1,3 +1,12 @@
+[workspace]
+members = [
+    "parsers/rushi",
+    "parsers/rush",
+    "crates/shardstypes",
+    # "shardslsp",
+    ".",
+]
+
 [package]
 name = "shards"
 version = "0.1.0"
@@ -15,7 +24,7 @@ simplelog = "0.12"
 xdg = "2.5"
 regex = "1.8.4"
 libc = "0.2"
-nix = "0.26"
+nix = "0.27"
 tokio = { version = "1.28", features = ["full"] }
 atty = "0.2.14"
 libloading = "0.8"
@@ -24,6 +33,5 @@ syn = { version = "2", features = ["full"] }
 # quote = "1"
 
 # stardust-lsp = { path = "../stardust-lsp" }
-# rushi = { path = "../rushi" }
 
-shards-types = { path = "../shards-types/" }
+libshards = { path = "./crates/shardstypes/" }

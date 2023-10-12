@@ -1,21 +1,5 @@
-// mod builtins;
-// mod config;
-// mod env;
-// mod exec;
-mod parser;
-mod pipes;
-mod prelude;
 
-use std::{
-    fs::File,
-    io::{stdin, BufRead},
-    path::PathBuf,
-};
-
-// use crate::config::line::Line;
-use crate::prelude::*;
-
-const OPTIMIZATION_LEVEL: u8 = 3;
+use std::path::PathBuf;
 
 use clap::Parser;
 
@@ -31,19 +15,19 @@ use clap::Parser;
 pub struct RushiArgs {
     /// Enables debug mode
     #[arg(short = 'd', long, default_value_t = false)]
-    debug: bool,
+    pub debug: bool,
 
     /// File to use for debug output
     #[arg(short = 'o', long, value_name = "PATH", value_hint = clap::ValueHint::FilePath)]
-    debug_output: Option<PathBuf>,
+    pub debug_output: Option<PathBuf>,
 
     /// Commands to be executed in place of interactive shell.
     #[arg(short = 'c', long = "command", value_name = "COMMAND")]
-    batch_cmds: Option<Vec<String>>,
+    pub batch_cmds: Option<Vec<String>>,
 
     /// Commands to execute after the shell's config has been read.
     #[arg(short = 'C', long = "init-command", value_name = "COMMAND")]
-    postconfig_cmds: Option<Vec<String>>,
+    pub postconfig_cmds: Option<Vec<String>>,
 
     /// Whether no-config is set. default is false.
     #[arg(short = 'N', long, default_value_t = false)]
@@ -77,7 +61,12 @@ pub struct RushiArgs {
     // features: Option<Vec<Feature>>,
 }
 
+
 impl RushiArgs {
+    pub fn gen() -> Self {
+        Self::parse().imply_args()
+    }
+
     fn imply_args(mut self) -> Self {
         // if the first argument starts with a dash, we are a login shell
         if std::env::args().take(1).any(|arg| arg.starts_with('-')) {
@@ -103,90 +92,4 @@ impl RushiArgs {
 
         self
     }
-}
-
-fn main() -> ! {
-    match rushi() {
-        Ok(_) => std::process::exit(0),
-        Err(e) => {
-            eprintln!("Error: {}", e);
-            std::process::exit(1);
-        }
-    }
-}
-
-#[tokio::main]
-async fn rushi() -> Result<()> {
-    let args = RushiArgs::parse().imply_args();
-
-    if args.debug {
-        simplelog::WriteLogger::init(
-            simplelog::LevelFilter::Info,
-            simplelog::Config::default(),
-            File::create(
-                args.debug_output
-                    .clone()
-                    .unwrap_or_else(|| PathBuf::from("rushi.log")),
-            )?,
-        )
-        .expect("Failed to start logger");
-
-        log::info!("Debug mode enabled");
-    }
-
-    // setlocale(LC_ALL, "");
-
-    let interpreter = Interpreter::new();
-
-    // TODO: better implementation is to build config from args then env
-    // from the config
-
-    // source user and system config
-    // let mut paths = ConfigPaths::new(&args);
-    // paths.source(&interpreter, &mut env, &mut sys);
-
-    // let mut env = UserState::new(&args);
-
-    // let mut l = Line::new();
-    let mut l = stdin().lock();
-
-    println!("Welcome to Shards!");
-
-    // let (lsp, rx) = Client::start("rust-analyzer", &[""], None, HashMap::new(), 0, "rls", 100)?;
-    // lsp.initialize(true).await?;
-
-    log::info!("Starting main event loop");
-
-    'running: loop {
-        // let line = l.next_line().unwrap();
-        let mut line = String::new();
-        _ = l.read_line(&mut line);
-
-        log::info!("read line from stdin");
-
-        let ast = Ast::parse(&line).unwrap();
-
-        log::info!("Got some ast");
-
-        let mut optc = OpCode::from(ast);
-        for _ in 0..=OPTIMIZATION_LEVEL {
-            // finds reduntant memory copyies that can be remove and still
-            // garentee correctness
-            optc.reduce();
-        }
-        let bytes = ByteCode::from(optc);
-        let res = interpreter.eval(bytes);
-
-        log::info!("Finished parse cycle");
-
-        match res {
-            Ok(_) => {}
-            Err(_) => break 'running,
-        }
-    }
-
-    // restore_term_mode();
-    // restore_term_foreground_process_group_for_exit();
-
-    Ok(())
 }

@@ -1,8 +1,8 @@
 # build artifacts
 target/
-libs/
-shards-lsp/
 rushi.log
 refs/
-stardust/zig-cache
-stardust/zig-out
+src/builtins
+parsers/stardust/zig-cache
+parsers/stardust/zig-out
+src/env

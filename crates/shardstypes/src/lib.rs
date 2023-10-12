@@ -8,10 +8,14 @@
 //! directly or to use a package that abstracts this interface.
 
 /// The idomatic rust abstraction over the raw ast
-pub mod external;
-
-/// The raw bindings to the expected ast format
 pub mod internal;
 
-/// A short set of imports that may be usefult when working with this library
+/// The raw bindings to the expected ast format
+pub mod external;
+
+/// A set of imports that may be usefult when working with this library
 pub mod prelude;
+
+pub(crate) mod ffi;
+
+pub type ParseFuncSig = fn(*const u8, usize) -> external::ShardsAst;

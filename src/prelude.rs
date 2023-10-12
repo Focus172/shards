@@ -1,6 +1,7 @@
 // Rexports of the common untilites of the crate
 pub use crate::parser::*;
-pub use shards_types::prelude::*;
+pub use libshards::prelude::*;
+pub use crate::cli::RushiArgs;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

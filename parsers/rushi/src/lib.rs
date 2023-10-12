@@ -1,9 +1,7 @@
 //! A library for parsing and manipulating Rust source code
 //! into a ast a general ast.
 
-use libc::c_char;
-use shards_types::prelude::*;
-use std::{ffi::CStr, ptr::null};
+use libshards::prelude::*;
 
 /// Main external entry point for the library, this is used by non-rust and
 /// dynamic contexts.
@@ -13,26 +11,13 @@ use std::{ffi::CStr, ptr::null};
 /// responsible for assuming that the value pased into here is never mutated
 /// as is assumed to be dropped.
 #[no_mangle]
-pub unsafe extern "C" fn parse(s: *const c_char) -> ShardsAst {
-    let c_str = unsafe {
-        assert!(!s.is_null());
-
-        CStr::from_ptr(s)
+pub unsafe extern fn parse(c: *const u8, len: usize) -> ShardsAst {
+    let Ok(s) = std::str::from_utf8(std::slice::from_raw_parts(c, len)) else {
+        eprintln!("Failed to parse string");
+        return ShardsAst::invalid();
     };
 
-    let r_str = match c_str.to_str() {
-        Ok(str) => str,
-        Err(e) => {
-            eprint!("parse error: {e}");
-            return ShardsAst {
-                is_valid: false,
-                number_of_tokens: 0,
-                tokens: null(),
-            };
-        }
-    };
-
-    parse_safe(r_str).into_shards_ast()
+    parse_safe(s).into()
 }
 
 /// Main entry point to the function when working in safe-rust. This is for if
@@ -52,9 +37,10 @@ pub fn parse_safe(s: &str) -> Ast {
     // Token::Identifier(Identifier::Literal { value: todo!()}),
 
     let mut tokens = vec![
-        Token::Operation(Operation::ScriptCall("ls".into())),
-        Token::Operation(Operation::ScriptCall("ls".into())),
+        Token::Operation(Operation::ScriptCall { name: String::from("ls") }),
+        // Token::Operation(Operation::ScriptCall("ls".into())),
     ];
+
     tokens.shrink_to_fit();
 
     Ast { tokens }

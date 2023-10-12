@@ -35,8 +35,6 @@ pub trait FromExternalAst {
     fn parse(s: &str) -> Option<Ast>;
 }
 
-type ParseFunc = fn(*const u8) -> ShardsAst;
-
 impl FromExternalAst for Ast {
     fn parse(s: &str) -> Option<Ast> {
         let crate_path = env!("PWD");
@@ -45,13 +43,14 @@ impl FromExternalAst for Ast {
 
         let ast = unsafe {
             let ptr = s.as_ptr();
+            let len = s.len();
             let lib = Library::new(library_path).unwrap();
-            let func: Symbol<ParseFunc> = lib.get(b"parse").unwrap();
+            let func: Symbol<libshards::ParseFuncSig> = lib.get(b"parse").unwrap();
 
-            func(ptr)
+            func(ptr, len)
         };
 
-        ast.into_ast()
+        ast.try_into().ok()
 
         // let parse = format!(
         //     "fn main() {{
