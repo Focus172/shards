@@ -6,6 +6,14 @@
 //! When using rust it is recomended to construct it using the Ast type an
 //! then convert it to the other. Other languages can either use the interface
 //! directly or to use a package that abstracts this interface.
+#![deny(
+    // missing_docs,
+    missing_debug_implementations,
+    rust_2018_idioms,
+    unused_imports,
+    dead_code,
+    unused_crate_dependencies
+)]
 
 /// The idomatic rust abstraction over the raw ast
 pub mod internal;

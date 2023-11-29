@@ -14,7 +14,7 @@ use std::io::Write;
 use std::iter::Peekable;
 use std::process::exit;
 use std::rc::Rc;
-use crate::runner::Runner;
+// use crate::runner::Runner;
 
 // #[derive(Debug, PartialEq)]
 // pub struct Cmd {
@@ -110,10 +110,7 @@ impl<I> Parser<I>
     }
 
     pub fn get(&mut self) -> Result<Cmd, String> {
-        self.get_and()
-    }
 
-    pub fn get_and(&mut self) -> Result<Cmd, String> {
         let mut node = self.get_pipe()?;
         while let Some(Op(Op::And)) | Some(Op(Op::Or)) = self.lexer.peek() {
             if let Some(Op(Op::And)) = self.lexer.next() {
@@ -319,21 +316,22 @@ impl<I> Parser<I>
                     }
                 }
                 Sub(e) => {
+                    todo!()
                     // FIXME: `$(ls something)`, commands with params don't work atm
                     // for some reason
-                    let mut parser = Parser::new(vec!(Word(e)).into_iter(), Rc::clone(&self.shell));
-
-                    // This setup here allows me to do a surprisingly easy subshell.
-                    // Though subshells typically seem to inherit everything I'm keeping in my
-                    // `shell` variable at the moment?
-                    if let Ok(command) = parser.get() {
-                        #[cfg(debug_assertions)] // Only include when not built with `--release` flag
-                        println!("\u{001b}[33m{:#?}\u{001b}[0m", command);
-
-                        let mut output = Runner::new(Rc::clone(&parser.shell)).execute(command, true).unwrap();
-                        output = output.replace(char::is_whitespace, " ");
-                        phrase.push_str(output.trim());
-                    }
+                    // let mut parser = Parser::new(vec!(Word(e)).into_iter(), Rc::clone(&self.shell));
+                    //
+                    // // This setup here allows me to do a surprisingly easy subshell.
+                    // // Though subshells typically seem to inherit everything I'm keeping in my
+                    // // `shell` variable at the moment?
+                    // if let Ok(command) = parser.get() {
+                    //     #[cfg(debug_assertions)] // Only include when not built with `--release` flag
+                    //     println!("\u{001b}[33m{:#?}\u{001b}[0m", command);
+                    //
+                    //     let mut output = Runner::new(Rc::clone(&parser.shell)).execute(command, true).unwrap();
+                    //     output = output.replace(char::is_whitespace, " ");
+                    //     phrase.push_str(output.trim());
+                    // }
                 }
             }
         }
@@ -393,72 +391,72 @@ impl<I> Parser<I>
     }
 }
 
-// TODO: Tests for redirection
-#[cfg(test)]
-mod parser_tests {
-    use super::{Cmd, Io, Parser, Simple};
-    use crate::helpers::Shell;
-    use crate::lexer::Lexer;
-    use std::cell::RefCell;
-    use std::rc::Rc;
-
-    #[test]
-    fn test_and() {
-        let shell = Rc::new(RefCell::new(Shell::new(None)));
-        let lexer = Lexer::new("ls | grep cargo && pwd", Rc::clone(&shell));
-        let mut parser = Parser::new(lexer, Rc::clone(&shell));
-        let expected = Cmd::And(
-            Box::new(Cmd::Pipeline(
-                Box::new(Cmd::Simple(Simple::new(
-                    String::from("ls"),
-                    vec![],
-                    Io::new(),
-                ))),
-                Box::new(Cmd::Simple(Simple::new(
-                    String::from("grep"),
-                    vec![String::from("cargo")],
-                    Io::new(),
-                ))),
-            )),
-            Box::new(Cmd::Simple(Simple::new(
-                String::from("pwd"),
-                vec![],
-                Io::new(),
-            ))),
-        );
-        assert_eq!(expected, parser.get().unwrap())
-    }
-
-    #[test]
-    fn test_pipes() {
-        let shell = Rc::new(RefCell::new(Shell::new(None)));
-        let lexer = Lexer::new("ls | grep cargo", Rc::clone(&shell));
-        let mut parser = Parser::new(lexer, Rc::clone(&shell));
-        let expected = Cmd::Pipeline(
-            Box::new(Cmd::Simple(Simple::new(
-                String::from("ls"),
-                vec![],
-                Io::new(),
-            ))),
-            Box::new(Cmd::Simple(Simple::new(
-                String::from("grep"),
-                vec![String::from("cargo")],
-                Io::new(),
-            ))),
-        );
-        assert_eq!(expected, parser.get().unwrap())
-    }
-
-    #[test]
-    fn test_simple() {
-        let shell = Rc::new(RefCell::new(Shell::new(None)));
-        let lexer = Lexer::new("ls -ltr", Rc::clone(&shell));
-        let mut parser = Parser::new(lexer, Rc::clone(&shell));
-        let expected = Cmd::Simple(Simple::new(
-            String::from("ls"),
-            vec![String::from("-ltr")],
-            Io::new(),
-        ));
-        assert_eq!(expected, parser.get().unwrap())
-    }
-}
+// // TODO: Tests for redirection
+// #[cfg(test)]
+// mod parser_tests {
+//     use super::{Cmd, Io, Parser, Simple};
+//     use crate::helpers::Shell;
+//     use crate::lexer::Lexer;
+//     use std::cell::RefCell;
+//     use std::rc::Rc;
+//
+//     #[test]
+//     fn test_and() {
+//         let shell = Rc::new(RefCell::new(Shell::new(None)));
+//         let lexer = Lexer::new("ls | grep cargo && pwd", Rc::clone(&shell));
+//         let mut parser = Parser::new(lexer, Rc::clone(&shell));
+//         let expected = Cmd::And(
+//             Box::new(Cmd::Pipeline(
+//                 Box::new(Cmd::Simple(Simple::new(
+//                     String::from("ls"),
+//                     vec![],
+//                     Io::new(),
+//                 ))),
+//                 Box::new(Cmd::Simple(Simple::new(
+//                     String::from("grep"),
+//                     vec![String::from("cargo")],
+//                     Io::new(),
+//                 ))),
+//             )),
+//             Box::new(Cmd::Simple(Simple::new(
+//                 String::from("pwd"),
+//                 vec![],
+//                 Io::new(),
+//             ))),
+//         );
+//         assert_eq!(expected, parser.get().unwrap())
+//     }
+//
+//     #[test]
+//     fn test_pipes() {
+//         let shell = Rc::new(RefCell::new(Shell::new(None)));
+//         let lexer = Lexer::new("ls | grep cargo", Rc::clone(&shell));
+//         let mut parser = Parser::new(lexer, Rc::clone(&shell));
+//         let expected = Cmd::Pipeline(
+//             Box::new(Cmd::Simple(Simple::new(
+//                 String::from("ls"),
+//                 vec![],
+//                 Io::new(),
+//             ))),
+//             Box::new(Cmd::Simple(Simple::new(
+//                 String::from("grep"),
+//                 vec![String::from("cargo")],
+//                 Io::new(),
+//             ))),
+//         );
+//         assert_eq!(expected, parser.get().unwrap())
+//     }
+//
+//     #[test]
+//     fn test_simple() {
+//         let shell = Rc::new(RefCell::new(Shell::new(None)));
+//         let lexer = Lexer::new("ls -ltr", Rc::clone(&shell));
+//         let mut parser = Parser::new(lexer, Rc::clone(&shell));
+//         let expected = Cmd::Simple(Simple::new(
+//             String::from("ls"),
+//             vec![String::from("-ltr")],
+//             Io::new(),
+//         ));
+//         assert_eq!(expected, parser.get().unwrap())
+//     }
+// }

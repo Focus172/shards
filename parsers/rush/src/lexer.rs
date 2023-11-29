@@ -408,7 +408,7 @@ mod lexer_tests {
 
     #[test]
     fn test_lexer() {
-        let shell = Rc::new(RefCell::new(Shell::new(None)));
+        let shell = Rc::new(RefCell::new(Shell::new()));
         let mut lexer = Lexer::new("exa -1 | grep cargo", Rc::clone(&shell));
         let expected = [
             Word(vec![Literal(String::from("exa"))]),

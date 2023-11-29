@@ -1,17 +1,18 @@
+use std::{alloc::Layout, ptr::Alignment};
+
 #[repr(C)]
+#[derive(Debug)]
 pub struct FfiString {
     pub ptr: *mut u8,
     pub len: usize,
+    pub cap: usize,
 }
 
 impl From<String> for FfiString {
     fn from(value: String) -> Self {
         let mut value = value;
-        value.shrink_to_fit();
-        let buf = value.leak();
-        let ptr = buf.as_mut_ptr();
-        let len = buf.len();
-        Self { ptr, len }
+        let (ptr, len, cap) = unsafe { value.into_raw_parts() };
+        Self { ptr, len, cap }
     }
 }
 
@@ -23,7 +24,7 @@ impl TryFrom<FfiString> for String {
             return Err(format!("Pointer was Null."));
         }
 
-        Ok(unsafe { String::from_raw_parts(value.ptr, value.len, value.len) })
+        Ok(unsafe { String::from_raw_parts(value.ptr, value.len, value.cap) })
     }
 }
 

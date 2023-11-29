@@ -76,13 +76,9 @@ pub enum Operation {
 impl From<Operation> for ShardsOperation {
     fn from(value: Operation) -> Self {
         match value {
-            Operation::ScriptCall { mut name } => {
-                name.shrink_to_fit();
+            Operation::ScriptCall { name } => {
                 let slice = name.leak();
-                Self::ScriptCall(crate::ffi::FfiString {
-                    ptr: slice.as_mut_ptr(),
-                    len: slice.len(),
-                })
+                Self::ScriptCall(name)
             }
             Operation::Add => Self::Add,
             Operation::Subtract => Self::Subtract,

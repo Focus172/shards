@@ -1,6 +1,7 @@
 use crate::{ffi::FfiString, prelude::*};
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct ShardsAst {
     /// A flag that repersents if the current Ast is valid. When true treated
     /// as if the rest of None was returned. With the exceptions that the data
@@ -68,6 +69,7 @@ impl TryFrom<ShardsAst> for Ast {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum ShardsToken {
     Identifier(ShardsIdentifier),
     Operation(ShardsOperation),
@@ -91,6 +93,7 @@ impl TryFrom<ShardsToken> for Token {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum ShardsIdentifier {
     Variable(FfiString),
     Literal { value: ShardsValue },
@@ -112,9 +115,10 @@ impl TryFrom<ShardsIdentifier> for Identifier {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum ShardsOperation {
     // Takes the raw parts of and owned String
-    ScriptCall(FfiString),
+    ScriptCall(String),
     Add,
     Subtract,
     Multiply,
@@ -136,6 +140,7 @@ impl TryFrom<ShardsOperation> for Operation {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct ShardsValue {
     /// A type hint for what the data is. Can use the None value to let
     /// it be guessed
@@ -159,6 +164,7 @@ impl TryFrom<ShardsValue> for Value {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum ShardsType {
     /// Useful for languages that are not strongly typed
     Untyped,

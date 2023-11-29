@@ -2,9 +2,9 @@ use nix::unistd::Uid;
 use os_pipe::{dup_stderr, dup_stdin, dup_stdout, PipeReader, PipeWriter};
 use std::collections::HashMap;
 use std::env;
-use std::fs::{self, File, OpenOptions};
+use std::fs::{File, OpenOptions};
 use std::io::{self, BufRead, BufReader, Write};
-use std::process::{Stdio, self};
+use std::process::{self, Stdio};
 
 // My own, less nasty version of BufRead::lines().
 // Returns an Option rather Option<Result>,
@@ -41,21 +41,12 @@ pub struct Shell {
 }
 
 impl Shell {
-    pub fn new(file: Option<String>) -> Shell {
-        let (lines, interactive, name): (Lines<Box<dyn BufRead>>, bool, String) =
-            if let Some(filename) = file {
-                (
-                    Lines::new(Box::new(BufReader::new(fs::File::open(&filename).unwrap()))),
-                    false,
-                    filename,
-                )
-            } else {
-                (
-                    Lines::new(Box::new(BufReader::new(io::stdin()))),
-                    true,
-                    String::from("rush"),
-                )
-            };
+    pub fn new() -> Shell {
+        let (lines, interactive, name): (Lines<Box<dyn BufRead>>, bool, String) = (
+            Lines::new(Box::new(BufReader::new(io::stdin()))),
+            true,
+            String::from("rush"),
+        );
         Shell {
             lines,
             interactive,
@@ -85,8 +76,8 @@ impl Shell {
         self.lines.next()
     }
 
-    // Not super satisfied with this as it is returning a String when it could be a 
-    // reference, but this also allows handling stuff like $@ right here, as that would need to be 
+    // Not super satisfied with this as it is returning a String when it could be a
+    // reference, but this also allows handling stuff like $@ right here, as that would need to be
     // stitched together here and thus it would own the value.
     // Also, env:: calls in Rust seem to return ownership rather than references, which is
     // nasty.
@@ -100,8 +91,8 @@ impl Shell {
         } else {
             match key {
                 "@" | "*" => Some(self.positional.join(" ")), // these are technically more complicated but it works for now
-                "#" => Some(self.positional.len().to_string()), 
-                "$" => Some(process::id().to_string()), 
+                "#" => Some(self.positional.len().to_string()),
+                "$" => Some(process::id().to_string()),
                 _ => self
                     .vars
                     .get(key)

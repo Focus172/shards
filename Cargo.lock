@@ -249,9 +249,6 @@ dependencies = [
 [[package]]
 name = "libshards"
 version = "0.1.0"
-dependencies = [
- "log",
-]
 
 [[package]]
 name = "lock_api"

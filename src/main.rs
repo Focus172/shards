@@ -2,10 +2,10 @@
 // mod config;
 // mod env;
 // mod exec;
+mod cli;
 mod parser;
 mod pipes;
 mod prelude;
-mod cli;
 
 use std::{
     fs::File,
@@ -88,11 +88,8 @@ async fn rushi() -> Result<()> {
             optc.reduce();
         }
         let bytes = ByteCode::from(optc);
-        let res = interpreter.eval(bytes);
 
-        log::info!("Finished parse cycle");
-
-        match res {
+        match interpreter.eval(bytes) {
             Ok(_) => {}
             Err(_) => break 'running,
         }
