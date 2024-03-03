@@ -1,11 +1,17 @@
-# rush - the really uninteractive shell
-Rush is designed to run POSIX scripts, and run them fast. Think of it as a Rust [dash](https://en.wikipedia.org/wiki/Almquist_shell#dash).
-
+# Rush
 I know that the name is overused, but it's too good to pass up.
 
-![pretty demo](https://raw.githubusercontent.com/ashpil/rush/master/demo.png)
+## Pipeline
+The shell takes a parser and the parser takes a lexer, the lexer takes a data
+steam. Each component can be swapped for maximum reuse.
 
-### // TODO: 
+## Iterator
+Everything is made using iterators meaning that hypothetically a file that
+contains `echo hello` followed by 100,000 lines of comments will:
+    - not have memory problems
+    - will print 'hello' before the file finishes reading
+
+## TODO
 - [X] Simple command execution `ls -ltr`
 - [X] Pipes `exa | grep cargo`
 - [X] Exit status logic `! false && ls || date`
@@ -43,5 +49,5 @@ I know that the name is overused, but it's too good to pass up.
 
 
 ### Decisions to make
-
-* Should this shell replicate commands that are typically built-in but also have system alternatives?
+* Should this shell replicate commands that are typically built-in but also
+    have system alternatives?

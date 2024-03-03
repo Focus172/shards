@@ -1,20 +1,67 @@
-pub mod helpers;
+pub mod cli;
 pub mod lexer;
-pub mod parser;
+pub mod parse;
+pub mod prelude;
+pub mod shell;
+pub mod util;
 
-use parser::Cmd;
+use crate::prelude::*;
+use std::{fs, process::ExitCode};
 
-use crate::helpers::Shell;
-use crate::lexer::Lexer;
-use crate::parser::Parser;
+use crate::{
+    cli::ShellMode,
+    lexer::Lexer,
+    parse::{Parser, Prompter},
+};
 
-use std::cell::RefCell;
-use std::rc::Rc;
+pub fn rush() -> ExitCode {
+    self::logger();
 
-pub fn rush(input: String) -> Result<Cmd, String> {
-    let shell = Rc::new(RefCell::new(Shell::new()));
+    let exit = match ShellMode::get() {
+        ShellMode::Run(path) => {
+            log::info!("running file: {:?}", path);
 
-    let lexer = Lexer::new(&input, shell.clone());
-    let mut parser = Parser::new(lexer, shell.clone());
-    parser.get()
+            let data = fs::read_to_string(path).unwrap();
+            let input = data.chars().peekable();
+            let shell = Shell::eval(Parser::new(Lexer::new(input)));
+            shell.run()
+        }
+        ShellMode::Eval => todo!(),
+        ShellMode::Interactive => {
+            log::info!("running interactive session");
+            Shell::interactive(Prompter::new()).run()
+        }
+        ShellMode::Login => {
+            log::info!("running login session");
+
+            Shell::login(Prompter::new()).run()
+        }
+        ShellMode::Command(cmd) => {
+            log::info!("running command: {:?}", cmd);
+
+            let input = cmd.chars().peekable();
+            let shell = Shell::eval(Parser::new(Lexer::new(input)));
+
+            shell.run()
+        }
+    };
+
+    match exit {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprint!("{:?}", e);
+            // TODO: more complext exit codes
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn logger() {
+    simplelog::TermLogger::init(
+        log::LevelFilter::Info,
+        simplelog::Config::default(),
+        simplelog::TerminalMode::Mixed,
+        simplelog::ColorChoice::Auto,
+    )
+    .unwrap();
 }

@@ -1,0 +1,26 @@
+[package]
+name = "shards"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# reedline = "0.22"
+# crossterm = "*"
+# nu-ansi-term = "*"
+anyhow = "1"
+thiserror = "1"
+clap = { version = "4.3", features = ["derive"] }
+log = "0.4"
+simplelog = "0.12"
+xdg = "2.5"
+regex = "1.8.4"
+libc = "0.2"
+nix = "0.27"
+tokio = { version = "1.28", features = ["full"] }
+atty = "0.2.14"
+libloading = "0.8"
+
+syn = { version = "2", features = ["full"] }
+# quote = "1"
+
+libshards = { path = "../crates/shardstypes/" }
