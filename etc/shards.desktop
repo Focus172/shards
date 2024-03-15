@@ -2,7 +2,7 @@
 Version=0.1.0
 Type=Application
 Terminal=true
-Exec=shards --shell-hint stardust
+Exec=shards --shell-hint rush
 Name=shards
 Comment=A shell sent from mars
 Icon=shards

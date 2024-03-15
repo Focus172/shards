@@ -1,0 +1,3 @@
+[submodule "parsers/rush"]
+	path = parsers/rush
+	url = https://github.com/focus172/rush.git

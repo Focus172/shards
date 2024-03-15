@@ -9,7 +9,7 @@ impl Interpreter {
 
     // TODO: make it take some sort of enviorment state so that it can resolve
     // aliases
-    pub fn eval(&self, bytes: ByteCode) -> Result<()> {
+    pub fn eval(&self, _bytes: ByteCode) -> Result<()> {
         // match ast.next().unwrap() {
         //     "exit" => return Err(anyhow::anyhow!("exit")),
         //     "echo" => {

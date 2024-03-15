@@ -1,10 +1,8 @@
-use std::os::fd::RawFd;
-
-use super::fds::AutoCloseFd;
+use std::os::fd::{OwnedFd, RawFd};
 
 pub struct Streams {
-    pub out: AutoCloseFd,
-    pub err: AutoCloseFd,
+    pub out: OwnedFd,
+    pub err: OwnedFd,
     pub out_is_redirected: bool,
     pub err_is_redirected: bool,
 }

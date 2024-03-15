@@ -39,42 +39,24 @@ impl FromExternalAst for Ast {
     fn parse(s: &str) -> Option<Ast> {
         let crate_path = env!("PWD");
         let library_path = format!("{}/{}", crate_path, "libs/librushi.so");
-        println!("Loading add() from {}", library_path);
 
         let ast = unsafe {
             let ptr = s.as_ptr();
             let len = s.len();
+            println!("Loading parse() from {}", library_path);
             let lib = Library::new(library_path).unwrap();
             let func: Symbol<libshards::ParseFuncSig> = lib.get(b"parse").unwrap();
 
             func(ptr, len)
         };
 
-        ast.try_into().ok()
-
-        // let parse = format!(
-        //     "fn main() {{
-        //     {s}
-        // }}"
-        // );
-
-        // let syntax = syn::parse_file(&parse).expect("Unable to parse file");
-        // let Some(shebang) = syntax.shebang else {
-        //     panic!("No shebang found");
-        // };
-
-        // match rushi::ast_from_str(&parse) {
-        //     Some(s) => Ok(Ast {
-        //         args: s,
-        //     }),
-        //     None => Err(anyhow::anyhow!("Failed to parse ast").into()),
-        // }
-
-        // Ok(Ast {
-        //     args: s.split_whitespace().collect::<VecDeque<&str>>(),
-        // })
-
-        // Ok(Self { args: syntax })
+        match ast.try_into() {
+            Ok(a) => Some(a),
+            Err(e) => {
+                log::error!("failed to load thing: {:?}", e);
+                None
+            }
+        }
     }
 
     // pub fn next(&mut self) -> Option<&'a str> {

@@ -4,32 +4,28 @@
 // mod exec;
 mod cli;
 mod parser;
-mod pipes;
+// mod pipes;
+mod line;
 mod prelude;
 
-use std::{
-    fs::File,
-    io::{stdin, BufRead},
-    path::PathBuf,
-};
+use std::{fs::File, path::PathBuf};
 
 // use crate::config::line::Line;
 use crate::prelude::*;
 
 const OPTIMIZATION_LEVEL: u8 = 3;
 
-fn main() -> ! {
+fn main() -> std::process::ExitCode {
     match rushi() {
-        Ok(_) => std::process::exit(0),
+        Ok(_) => std::process::ExitCode::from(0),
         Err(e) => {
-            eprintln!("Error: {}", e);
-            std::process::exit(1);
+            eprintln!("Error: {:?}", e);
+            std::process::ExitCode::from(1)
         }
     }
 }
 
-#[tokio::main]
-async fn rushi() -> Result<()> {
+fn rushi() -> Result<()> {
     let args = RushiArgs::gen();
 
     if args.debug {
@@ -61,7 +57,6 @@ async fn rushi() -> Result<()> {
     // let mut env = UserState::new(&args);
 
     // let mut l = Line::new();
-    let mut l = stdin().lock();
 
     println!("Welcome to Shards!");
 
@@ -71,20 +66,15 @@ async fn rushi() -> Result<()> {
     log::info!("Starting main event loop");
 
     'running: loop {
-        // let line = l.next_line().unwrap();
-        let mut line = String::new();
-        _ = l.read_line(&mut line);
+        let line = crate::line::next().unwrap();
 
         log::info!("read line from stdin");
 
         let ast = Ast::parse(&line).unwrap();
-
         log::info!("Got some ast");
 
         let mut optc = OpCode::from(ast);
         for _ in 0..=OPTIMIZATION_LEVEL {
-            // finds reduntant memory copyies that can be remove and still
-            // garentee correctness
             optc.reduce();
         }
         let bytes = ByteCode::from(optc);

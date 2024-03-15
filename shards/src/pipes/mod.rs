@@ -3,5 +3,3 @@
 
 mod fds;
 mod streams;
-
-pub use fds::open_cloexec;

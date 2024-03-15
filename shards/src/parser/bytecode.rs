@@ -1,16 +1,16 @@
 use crate::prelude::*;
-use std::marker::PhantomData;
 
 pub struct ByteCode {
-    operations: Vec<Thing>,
+    // operations: Vec<Thing>,
 }
 
 impl From<OpCode> for ByteCode {
-    fn from(value: OpCode) -> Self {
+    fn from(_value: OpCode) -> Self {
         Self {
-            operations: Vec::new(),
+            // operations: Vec::new(),
         }
     }
 }
 
-type Thing = PhantomData<String>;
+// use std::marker::PhantomData;
+// type Thing = PhantomData<String>;

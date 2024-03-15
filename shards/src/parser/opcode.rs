@@ -5,7 +5,7 @@
 use crate::prelude::*;
 
 pub struct OpCode {
-    pub ops: Vec<OpcodeOperation>,
+    // pub ops: Vec<OpcodeOperation>,
 }
 
 impl From<Ast> for OpCode {
@@ -31,43 +31,49 @@ impl From<Ast> for OpCode {
         //     }
         dbg!(ast);
 
-        OpCode { ops: Vec::new() }
+        OpCode {
+            // ops: Vec::new()
+        }
     }
 }
 
 impl OpCode {
-    pub fn reduce(&mut self) {}
+    /// Finds reduntant memory copies that can be removed while guaranteeing
+    /// correctness.
+    pub fn reduce(&mut self) {
+        log::error!("Reduction Unimplemented.");
+    }
 }
 
-pub struct OpcodeOperation {
-    pub command: Command,
-    pub arg1: Argument,
-    pub arg2: Option<Argument>,
-}
+// pub struct OpcodeOperation {
+//     pub command: Command,
+//     pub arg1: Argument,
+//     pub arg2: Option<Argument>,
+// }
 
-pub enum Command {
-    Add,
-    Subtract,
-}
-
-pub enum Argument {
-    Number(f64),
-    String(String),
-    Bool(bool),
-    Table(Table),
-}
-
-pub struct Table {
-    pub members: Vec<Value>,
-}
-
-pub enum Value {
-    KeyValue(Pair),
-    Array(Vec<Argument>),
-    Literal(Argument),
-}
-
-pub struct Pair {
-    key: Argument,
-    value: Argument,
-}
+// pub enum Command {
+//     Add,
+//     Subtract,
+// }
+//
+// pub enum Argument {
+//     Number(f64),
+//     String(String),
+//     Bool(bool),
+//     Table(Table),
+// }
+//
+// pub struct Table {
+//     pub members: Vec<Value>,
+// }
+//
+// pub enum Value {
+//     KeyValue(Pair),
+//     Array(Vec<Argument>),
+//     Literal(Argument),
+// }
+//
+// pub struct Pair {
+//     key: Argument,
+//     value: Argument,
+// }
