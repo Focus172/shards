@@ -38,12 +38,18 @@ pub struct ShardsAst {
     pub tokens_count: usize,
 }
 
+impl ShardsAst {
+    pub const fn invalid() -> Self {
+        unsafe { self::shards_invalid_ast() }
+    }
+}
+
 /// Used to construct an invalid Ast from external code.
 ///
 /// # Safety
-/// If you are using Rust do `None.into()` instead.
+/// If you are using Rust use [`ShardsAst::invalid`] instead.
 #[no_mangle]
-pub unsafe extern "C" fn shards_invalid_ast() -> ShardsAst {
+pub const unsafe extern "C" fn shards_invalid_ast() -> ShardsAst {
     ShardsAst {
         is_valid: false,
         tokens_pointer: std::ptr::null_mut(),

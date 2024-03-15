@@ -2,91 +2,112 @@
 // mod config;
 // mod env;
 // mod exec;
-mod cli;
-mod parser;
 // mod pipes;
+
+mod cli;
 mod line;
+mod parser;
 mod prelude;
 
-use std::{fs::File, path::PathBuf};
+use std::{fs::File, io, path::PathBuf};
 
-// use crate::config::line::Line;
 use crate::prelude::*;
 
 const OPTIMIZATION_LEVEL: u8 = 3;
 
 fn main() -> std::process::ExitCode {
-    match rushi() {
-        Ok(_) => std::process::ExitCode::from(0),
-        Err(e) => {
-            eprintln!("Error: {:?}", e);
-            std::process::ExitCode::from(1)
-        }
-    }
-}
-
-fn rushi() -> Result<()> {
     let args = RushiArgs::gen();
 
-    if args.debug {
-        simplelog::WriteLogger::init(
-            simplelog::LevelFilter::Info,
-            simplelog::Config::default(),
-            File::create(
-                args.debug_output
-                    .clone()
-                    .unwrap_or_else(|| PathBuf::from("rushi.log")),
-            )?,
-        )
-        .expect("Failed to start logger");
+    args.debug.then(|| logger(args.debug_file));
 
-        log::info!("Debug mode enabled");
-    }
-
+    // unsafe { libc::setlocale(libc::LC_ALL, b"\0".as_ptr() as *const i8) };
     // setlocale(LC_ALL, "");
 
-    let interpreter = Interpreter::new();
+    let interpreter = match Interpreter::new(Lang::Rust) {
+        Ok(i) => i,
+        Err(e) => {
+            eprintln!(
+                "{:?}",
+                e.attach_printable("failed to start shards. Do you have any langs intalled?")
+            );
+            return std::process::ExitCode::FAILURE;
+        }
+    };
 
-    // TODO: better implementation is to build config from args then env
-    // from the config
+    // let mut env = UserState::new(&args);
 
     // source user and system config
     // let mut paths = ConfigPaths::new(&args);
     // paths.source(&interpreter, &mut env, &mut sys);
 
-    // let mut env = UserState::new(&args);
-
-    // let mut l = Line::new();
-
-    println!("Welcome to Shards!");
+    eprintln!("Welcome to Shards!");
 
     // let (lsp, rx) = Client::start("rust-analyzer", &[""], None, HashMap::new(), 0, "rls", 100)?;
     // lsp.initialize(true).await?;
 
     log::info!("Starting main event loop");
+    let fatal = true;
 
-    'running: loop {
-        let line = crate::line::next().unwrap();
-
-        log::info!("read line from stdin");
-
-        let ast = Ast::parse(&line).unwrap();
-        log::info!("Got some ast");
-
-        let mut optc = OpCode::from(ast);
-        for _ in 0..=OPTIMIZATION_LEVEL {
-            optc.reduce();
-        }
-        let bytes = ByteCode::from(optc);
-
-        match interpreter.eval(bytes) {
+    while let Some(line) = crate::line::next() {
+        match parse(&interpreter, line) {
             Ok(_) => {}
-            Err(_) => break 'running,
+            Err(e) => {
+                eprintln!("{e:?}");
+                if fatal {
+                    return std::process::ExitCode::FAILURE;
+                }
+            }
         }
     }
-
-    // restore_term_mode();
     // restore_term_foreground_process_group_for_exit();
+
+    std::process::ExitCode::SUCCESS
+}
+
+fn logger(path: Option<PathBuf>) -> io::Result<()> {
+    let _ = simplelog::WriteLogger::init(
+        simplelog::LevelFilter::Info,
+        simplelog::Config::default(),
+        File::create(path.clone().unwrap_or_else(|| PathBuf::from("rushi.log")))?,
+    );
+
+    log::info!("Debug mode enabled");
+
+    Ok(())
+}
+
+#[derive(Debug)]
+pub enum ShardsError {
+    Ast,
+    Run,
+}
+impl fmt::Display for ShardsError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ShardsError::Ast => f.write_str("failed to get a failed ast"),
+            ShardsError::Run => f.write_str("failed to run the commnand"),
+        }
+    }
+}
+impl Context for ShardsError {}
+
+fn parse(inter: &Interpreter, input: String) -> Result<(), ShardsError> {
+    log::info!("read line from stdin");
+
+    let ast = inter
+        .loader
+        .parse(&input)
+        .ok_or(Report::new(ShardsError::Ast))?;
+    log::info!("Got some ast");
+
+    let mut optc = OpCode::from(ast);
+
+    for _ in 0..=OPTIMIZATION_LEVEL {
+        optc.reduce();
+    }
+    let bytes = ByteCode::from(optc);
+
+    inter.eval(bytes).change_context(ShardsError::Run)?;
 
     Ok(())
 }

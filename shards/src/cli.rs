@@ -1,4 +1,3 @@
-
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -19,15 +18,16 @@ pub struct RushiArgs {
 
     /// File to use for debug output
     #[arg(short = 'o', long, value_name = "PATH", value_hint = clap::ValueHint::FilePath)]
-    pub debug_output: Option<PathBuf>,
+    pub debug_file: Option<PathBuf>,
 
     /// Commands to be executed in place of interactive shell.
-    #[arg(short = 'c', long = "command", value_name = "COMMAND")]
-    pub batch_cmds: Option<Vec<String>>,
+    #[arg(short, long, value_name = "COMMAND")]
+    // pub commnad: Option<Vec<String>>,
+    pub commnad: Option<String>,
 
     /// Commands to execute after the shell's config has been read.
-    #[arg(short = 'C', long = "init-command", value_name = "COMMAND")]
-    pub postconfig_cmds: Option<Vec<String>>,
+    #[arg(short = 'C', long, value_name = "COMMAND")]
+    pub init_command: Option<String>,
 
     /// Whether no-config is set. default is false.
     #[arg(short = 'N', long, default_value_t = false)]
@@ -61,7 +61,6 @@ pub struct RushiArgs {
     // features: Option<Vec<Feature>>,
 }
 
-
 impl RushiArgs {
     pub fn gen() -> Self {
         Self::parse().imply_args()
@@ -79,14 +78,14 @@ impl RushiArgs {
         }
 
         // an output file implies something to output
-        if self.debug_output.is_some() {
+        if self.debug_file.is_some() {
             self.debug = true;
         }
 
         // We are an interactive session if we have not been given an explicit
         // command or file to execute and stdin is a tty. Note that the -i or
         // --interactive options also force interactive mode.
-        if self.batch_cmds.is_none() && atty::is(atty::Stream::Stdin) {
+        if self.init_command.is_none() && crossterm::tty::IsTty::is_tty(&std::io::stdin()) {
             self.is_interactive_session = true;
         }
 

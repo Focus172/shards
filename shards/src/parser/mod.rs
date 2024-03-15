@@ -1,9 +1,9 @@
-mod ast;
-mod bytecode;
-mod interpreter;
-mod opcode;
+mod astre;
+mod bytes;
+mod inter;
+mod opcod;
 
-pub use ast::FromExternalAst;
-pub use bytecode::ByteCode;
-pub use interpreter::Interpreter;
-pub use opcode::OpCode;
+pub use astre::Loader;
+pub use bytes::ByteCode;
+pub use inter::{Interpreter, Lang};
+pub use opcod::OpCode;

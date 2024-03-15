@@ -1,7 +1,7 @@
 //! A library for parsing and manipulating Rust source code
 //! into a ast a general ast.
 
-use libshards::{Ast, Operation, ShardsAst, Token};
+use libshards::{Ast, Identifier, Operation, ShardsAst, Token};
 
 /// Main external entry point for the library, this is used by non-rust and
 /// dynamic contexts.
@@ -17,7 +17,6 @@ pub unsafe extern "C" fn parse(c: *const u8, len: usize) -> ShardsAst {
         // return None.into();
         todo!()
     };
-    dbg!(&s);
 
     parse_safe(s).into()
 }
@@ -25,7 +24,7 @@ pub unsafe extern "C" fn parse(c: *const u8, len: usize) -> ShardsAst {
 /// Main entry point to the function when working in safe-rust. This is for if
 /// you decide to include the library naticly or somthing.
 pub fn parse_safe(s: &str) -> Ast {
-    println!("parsing: {}", s);
+    dbg!(&s);
 
     // let syntax = syn::parse_file(&s).expect("Unable to parse file");
     // let Some(shebang) = syntax.shebang else {
@@ -63,11 +62,15 @@ pub fn parse_safe(s: &str) -> Ast {
 
     // Ok(Self { args: syntax })
 
+    const A: [u8; 4] = *b"test";
+
     let mut tokens = vec![
         Token::Operation(Operation::ScriptCall {
             name: String::from("ls"),
         }),
-        // Token::Operation(Operation::ScriptCall("ls".into())),
+        Token::Identifier(Identifier::Literal {
+            value: libshards::Value::Untyped(Box::new(A)),
+        }), // Token::Operation(Operation::ScriptCall("ls".into())),
     ];
 
     tokens.shrink_to_fit();

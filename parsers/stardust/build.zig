@@ -5,7 +5,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const libshards = b.addSharedLibrary(.{
-        .name = "shards",
+        .name = "stardust",
         .root_source_file = .{ .path = "src/lib.zig" },
         .target = target,
         .optimize = optimize,

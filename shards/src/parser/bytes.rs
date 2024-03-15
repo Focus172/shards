@@ -1,11 +1,13 @@
 use crate::prelude::*;
 
+#[derive(Debug)]
 pub struct ByteCode {
     // operations: Vec<Thing>,
 }
 
 impl From<OpCode> for ByteCode {
-    fn from(_value: OpCode) -> Self {
+    fn from(value: OpCode) -> Self {
+        dbg!(value);
         Self {
             // operations: Vec::new(),
         }

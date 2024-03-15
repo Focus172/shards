@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 log.workspace = true
-resu.workspace = true
+# resu.workspace = true
 libshards-core = { path = "../libshards-core/" }
 
 [features]

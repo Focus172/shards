@@ -1,6 +1,6 @@
 # build artifacts
 /target
 zig-*
-/libs/
+/lib/
 
 /rushi.log

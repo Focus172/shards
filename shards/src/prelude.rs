@@ -1,32 +1,8 @@
-// Rexports of the common untilites of the crate
+//! Rexports of the common untilites of the crate
+#![allow(unused_imports)]
+
 pub use crate::cli::RushiArgs;
 pub use crate::parser::*;
-pub use libshards::{Ast, Token};
-
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("IO: {0}")]
-    IO(std::io::Error),
-    #[error(transparent)]
-    Static(anyhow::Error),
-}
-
-pub type Result<T> = std::result::Result<T, Error>;
-
-impl From<std::io::Error> for Error {
-    fn from(e: std::io::Error) -> Self {
-        Self::IO(e)
-    }
-}
-
-impl From<anyhow::Error> for Error {
-    fn from(e: anyhow::Error) -> Self {
-        Self::Static(e)
-    }
-}
-
-// impl From<log::SetLoggerError> for Error {
-//     fn from(e: log::SetLoggerError) -> Self {
-//         Self::Static(e.into())
-//     }
-// }
+pub use libshards::Ast;
+pub use resu::{Context, Report, Result, ResultExt};
+pub use std::fmt;

@@ -1,9 +1,9 @@
 [workspace]
 members = [
-    # "parsers/stardust",
     "parsers/rushi",
     "parsers/rush/rush*",
-    "crates/*",
+    "crates/shards-sys",
+    "crates/libshards*",
     # "crates/shardslsp",
     "shards",
 ]
@@ -13,3 +13,4 @@ resolver = "2"
 libshards = { path = "crates/libshards/" }
 resu = { package = "error-stack", version = "0.4" }
 log = "0.4"
+# libc = "0.2"

@@ -1,3 +1,5 @@
+//! The idomatic rust abstraction over the raw ast
+//!
 //! Type for working with the shards framework. The way it strange serialization
 //! pattern. Your end goal is to provide an ShardsAst as a return to your cdylib.
 //! this can be done in what ever way you want but this library is provided as
@@ -12,10 +14,9 @@
     rust_2018_idioms,
     unused_imports,
     dead_code,
-    // unused_crate_dependencies
+    unused_crate_dependencies
 )]
 #![feature(vec_into_raw_parts)]
-//! The idomatic rust abstraction over the raw ast
 
 pub type ParseFuncSig = fn(*const u8, usize) -> libshards_core::ShardsAst;
 /// Marker Trait
@@ -151,8 +152,17 @@ pub enum Value {
 }
 
 impl From<Value> for ShardsValue {
-    fn from(_value: Value) -> Self {
-        todo!()
+    fn from(value: Value) -> Self {
+        match value {
+            Value::Untyped(data) => ShardsValue {
+                variable_type: libshards_core::ShardsType::Untyped,
+                data,
+            },
+            Value::U32(_) => todo!(),
+            Value::U64(_) => todo!(),
+            Value::I32(_) => todo!(),
+            Value::I64(_) => todo!(),
+        }
     }
 }
 
@@ -225,9 +235,7 @@ impl TryFrom<ShardsOperation> for Operation {
         match value {
             ShardsOperation::ScriptCall(s) => {
                 // TODO: check validity of passed values
-                dbg!(&s);
                 let name = String::try_from(s).unwrap();
-                dbg!(&name);
                 Ok(Self::ScriptCall { name })
             }
             _ => todo!(),
@@ -240,7 +248,7 @@ impl TryFrom<ShardsValue> for Value {
 
     fn try_from(value: ShardsValue) -> Result<Self, Self::Error> {
         match value.variable_type {
-            ShardsType::Untyped => todo!(),
+            ShardsType::Untyped => Ok(Value::Untyped(value.data)),
             ShardsType::U32 => todo!(),
             ShardsType::U64 => todo!(),
             ShardsType::I32 => todo!(),

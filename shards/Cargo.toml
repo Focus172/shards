@@ -4,18 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-crossterm = "0.27"
-anyhow = "1"
-thiserror = "1"
-resu = { package = "error-stack", version = "0.4" }
-clap = { version = "4.3", features = ["derive"] }
-log = "0.4"
-simplelog = "0.12"
-regex = "1.8.4"
+clap = { version = "4", features = ["derive"] }
 libc = "0.2"
-atty = "0.2.14"
+crossterm = "0.27"
 libloading = "0.8"
-syn = { version = "2", features = ["full"] }
-# xdg = "2.5"
+simplelog = "0.12"
 
+# xdg = "2.5"
+# regex = "1"
+
+resu.workspace = true
+log.workspace = true
 libshards.workspace = true

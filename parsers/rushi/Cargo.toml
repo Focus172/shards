@@ -8,5 +8,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 libshards.workspace = true
-syn = { version = "2", features = ["full", "extra-traits"] }
-libc = "0.2"
+# syn = { version = "2", features = ["full", "extra-traits"] }

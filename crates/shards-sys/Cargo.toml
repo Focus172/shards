@@ -10,9 +10,3 @@ crate-type = ["cdylib"]
 log.workspace = true
 resu.workspace = true
 libshards-core = { path = "../libshards-core/" }
-
-[build-dependencies]
-cbindgen = "0.26"
-
-[features]
-static = []

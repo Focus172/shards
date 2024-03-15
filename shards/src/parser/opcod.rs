@@ -4,6 +4,7 @@
 
 use crate::prelude::*;
 
+#[derive(Debug)]
 pub struct OpCode {
     // pub ops: Vec<OpcodeOperation>,
 }
