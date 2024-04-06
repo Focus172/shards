@@ -1,24 +1,14 @@
-const mem = @import("std").mem; // will be used to compare bytes
-fn helper() f80 {
-    return 0.3;
-
-}
-
-const hello_world_in_c =
-    \\#include <stdio.h>
-    \\
-    \\int main(int argc, char **argv) {
-    \\    printf("hello world\n");
-    \\    return 0;
-    \\}
-;
+const std = @import("std");
 
 /// The function `addOne` adds one to the number given as its argument.
 fn addOne(number: i32) i32 {
     return number + 1;
 }
 
-test "expect addOne adds one to 41" {
+const name = "addOne";
+test name {
+    std.log.err("Running test {s}", .{name});
+
     // The Standard Library contains useful functions to help create tests.
     // `expect` is a function that verifies its argument is true.
     // It will return an error if its argument is false to indicate a failure.

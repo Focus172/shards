@@ -1,48 +1,17 @@
 {
   "nodes": {
-    "flake-compat": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1673956053,
-        "narHash": "sha256-4gtG9iQuiKITOjNQQeQIpoIB6b16fm+504Ch3sNKLd8=",
-        "owner": "edolstra",
-        "repo": "flake-compat",
-        "rev": "35bb57c0c8d8b62bbfd284272c928ceb64ddbde9",
-        "type": "github"
-      },
-      "original": {
-        "owner": "edolstra",
-        "repo": "flake-compat",
-        "type": "github"
-      }
-    },
-    "nix-filter": {
-      "locked": {
-        "lastModified": 1666547822,
-        "narHash": "sha256-razwnAybPHyoAyhkKCwXdxihIqJi1G6e1XP4FQOJTEs=",
-        "owner": "numtide",
-        "repo": "nix-filter",
-        "rev": "1a3b735e13e90a8d2fd5629f2f8363bd7ffbbec7",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "nix-filter",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1685573264,
-        "narHash": "sha256-Zffu01pONhs/pqH07cjlF10NnMDLok8ix5Uk4rhOnZQ=",
+        "lastModified": 1711668574,
+        "narHash": "sha256-u1dfs0ASQIEr1icTVrsKwg2xToIpn7ZXxW3RHfHxshg=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "380be19fbd2d9079f677978361792cb25e8a3635",
+        "rev": "219951b495fc2eac67b1456824cc1ec1fd2ee659",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixos-22.05",
+        "ref": "nixos-23.11",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -50,9 +19,7 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
-        "utils": "utils",
-        "zicross": "zicross",
-        "zig": "zig"
+        "utils": "utils"
       }
     },
     "systems": {
@@ -85,57 +52,6 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
-        "type": "github"
-      }
-    },
-    "zicross": {
-      "inputs": {
-        "nix-filter": "nix-filter",
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "utils": [
-          "utils"
-        ],
-        "zig-binaries": [
-          "zig"
-        ]
-      },
-      "locked": {
-        "lastModified": 1669413314,
-        "narHash": "sha256-OAdH2BrIFAhU1twWx5C8pUi2cTC8IQmB+6zqZLDW+uk=",
-        "owner": "flyx",
-        "repo": "Zicross",
-        "rev": "b145227c4afa2343b697799d9927507d7257e1ea",
-        "type": "github"
-      },
-      "original": {
-        "owner": "flyx",
-        "repo": "Zicross",
-        "type": "github"
-      }
-    },
-    "zig": {
-      "inputs": {
-        "flake-compat": "flake-compat",
-        "flake-utils": [
-          "utils"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1710548475,
-        "narHash": "sha256-Cr85T6VE/HYYKhsgCdTEjXbgwttiB9DMYiqqTQE9Q1I=",
-        "owner": "mitchellh",
-        "repo": "zig-overlay",
-        "rev": "3b770cd2465a145bc5526e05cbe20abbea7d9ada",
-        "type": "github"
-      },
-      "original": {
-        "owner": "mitchellh",
-        "repo": "zig-overlay",
         "type": "github"
       }
     }
