@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-log.workspace = true
+# log.workspace = true
 # resu.workspace = true
-libshards-core = { path = "../libshards-core/" }
+libshards-sys = { path = "../libshards-sys" }
 
 [features]
 static = []

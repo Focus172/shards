@@ -5,3 +5,4 @@ zig-*
 
 /rushi.log
 treet/result
+.direnv

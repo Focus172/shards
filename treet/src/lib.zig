@@ -1,24 +1,34 @@
 const std = @import("std");
 
-const donut = @import("donut.zig");
-
 const ts = @cImport({
     @cInclude("tree_sitter/api.h");
 });
 
-// const c = @cImport({
-//     // See https://github.com/ziglang/zig/issues/515
-//     @cDefine("_NO_CRT_STDIO_INLINE", "1");
-//     @cInclude("stdio.h");
-//     // @cInclude("/home/focus/dev/shards/libs/libshards.h");
-// });
+const shards = @cImport({
+    @cInclude("libshards.h");
+});
 
-pub export fn thing() i32 {
-    donut.run() catch return 1;
-    // _ = c.printf("Hello World\n");
-    return 0;
+const tsr = {};
+pub const LangType = enum(u8) { rust, c };
+
+pub export fn parse(str: *const u8, len: usize, lang: LangType) shards.ShardsAst {
+    _ = lang;
+    _ = len;
+    _ = str;
+
+    const parser: *ts.TSParser = ts.ts_parser_new() orelse return shards.shards_invalid_ast();
+    defer ts.ts_parser_delete(parser);
+
+    // switch (lang) {
+    //     .rust => {
+    //         const rust = tsr.tree_sitter_rust();
+    //         ts.ts_parser_set_language(parser, rust);
+    //         @panic("fuck");
+    //     },
+    // }
+    //
+    // const tree: *ts.TSTree = ts.ts_parser_parse_string(parser, null, str, len);
+    // defer ts.ts_tree_delete(tree);
+
+    return shards.shards_invalid_ast();
 }
-
-// export fn parse() c.ShardsAst {
-//     return c.shards_invalid_ast();
-// }

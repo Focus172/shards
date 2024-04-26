@@ -13,7 +13,17 @@ pub fn build(b: *std.Build) void {
     });
 
     libtreet.linkSystemLibrary2("tree-sitter", .{});
-    // libtreet.linkLibC();
+    libtreet.addIncludePath(.{ .path = "../lib" });
+    libtreet.addLibraryPath(.{ .path = "../lib" });
+    libtreet.linkSystemLibrary("shards");
+    libtreet.linkLibC();
+
+    // using duck as a dependency
+    // const duck = b.dependency("duck", .{
+    //     .target = target,
+    //     .optimize = optimize,
+    // });
+    // libtreet.addModule("duck", duck.module("duck"));
 
     b.installArtifact(libtreet);
 
@@ -35,6 +45,10 @@ pub fn build(b: *std.Build) void {
         });
 
         tdemo.addModule("treet", b.addModule("treet", .{ .source_file = .{ .path = "src/lib.zig" } }));
+        tdemo.addIncludePath(.{ .path = "../lib" });
+        tdemo.addLibraryPath(.{ .path = "../lib" });
+        tdemo.linkSystemLibrary("shards");
+        tdemo.linkLibC();
         b.installArtifact(tdemo);
     }
 }

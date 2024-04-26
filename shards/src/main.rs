@@ -16,8 +16,6 @@ use crate::prelude::*;
 const OPTIMIZATION_LEVEL: u8 = 3;
 
 fn main() -> std::process::ExitCode {
-    test();
-
     let args = RushiArgs::gen();
 
     args.debug.then(|| logger(args.debug_file));
@@ -114,54 +112,54 @@ fn parse(inter: &Interpreter, input: String) -> Result<(), ShardsError> {
     Ok(())
 }
 
-fn test() {
-    use tree_sitter::{Language, Parser};
-
-    let mut parser = Parser::new();
-
-    parser
-        .set_language(tree_sitter_rust::language())
-        .expect("Error loading Rust grammar");
-
-    let source_code = "fn test() {}";
-    let tree = parser.parse(source_code, None).unwrap();
-    // let mut walk = tree.walk();
-    let root_node = tree.root_node();
-    let mut i = 0;
-    while let Some(node) = root_node.named_child(i) {
-        let mut j = 0;
-        while let Some(n) = node.named_child(j) {
-            let a = n.range();
-            let s = &source_code[a.start_byte..a.end_byte];
-            dbg!(s);
-            dbg!(n.to_sexp());
-            dbg!(n.kind());
-            dbg!(n);
-            j += 1;
-        }
-        i += 1;
-    }
-
-    // dbg!(root_node.to_sexp());
-    // // let mut walk = root_node.walk();
-    // let children = root_node.children(&mut walk);
-    // for n in children {
-    //     dbg!(n.to_sexp());
-    //     dbg!(n.kind());
-    //     let mut walk = n.walk();
-    //     for c in n.named_children(&mut walk) {
-    //         // let mut walk = c.walk();
-    //         // dbg!(walk.field_name());
-    //         dbg!(c.to_sexp());
-    //     }
-    // }
-    // dbg!(&root_node);
-    // assert!(!root_node.has_error());
-    // let a = root_node.walk();
-    // dbg!(a.field_name());
-    // // root_node.language();
-    //
-    // assert_eq!(root_node.kind(), "source_file");
-    // assert_eq!(root_node.start_position().column, 0);
-    // assert_eq!(root_node.end_position().column, 12);
-}
+// fn test() {
+//     use tree_sitter::{Language, Parser};
+//
+//     let mut parser = Parser::new();
+//
+//     parser
+//         .set_language(tree_sitter_rust::language())
+//         .expect("Error loading Rust grammar");
+//
+//     let source_code = "fn test() {}";
+//     let tree = parser.parse(source_code, None).unwrap();
+//     // let mut walk = tree.walk();
+//     let root_node = tree.root_node();
+//     let mut i = 0;
+//     while let Some(node) = root_node.named_child(i) {
+//         let mut j = 0;
+//         while let Some(n) = node.named_child(j) {
+//             let a = n.range();
+//             let s = &source_code[a.start_byte..a.end_byte];
+//             dbg!(s);
+//             dbg!(n.to_sexp());
+//             dbg!(n.kind());
+//             dbg!(n);
+//             j += 1;
+//         }
+//         i += 1;
+//     }
+//
+//     // dbg!(root_node.to_sexp());
+//     // // let mut walk = root_node.walk();
+//     // let children = root_node.children(&mut walk);
+//     // for n in children {
+//     //     dbg!(n.to_sexp());
+//     //     dbg!(n.kind());
+//     //     let mut walk = n.walk();
+//     //     for c in n.named_children(&mut walk) {
+//     //         // let mut walk = c.walk();
+//     //         // dbg!(walk.field_name());
+//     //         dbg!(c.to_sexp());
+//     //     }
+//     // }
+//     // dbg!(&root_node);
+//     // assert!(!root_node.has_error());
+//     // let a = root_node.walk();
+//     // dbg!(a.field_name());
+//     // // root_node.language();
+//     //
+//     // assert_eq!(root_node.kind(), "source_file");
+//     // assert_eq!(root_node.start_position().column, 0);
+//     // assert_eq!(root_node.end_position().column, 12);
+// }

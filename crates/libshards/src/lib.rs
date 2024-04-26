@@ -18,23 +18,26 @@
 )]
 #![feature(vec_into_raw_parts)]
 
-pub type ParseFuncSig = fn(*const u8, usize) -> libshards_core::ShardsAst;
+pub type ParseFuncSig = fn(*const u8, usize) -> libshards_sys::ShardsAst;
 /// Marker Trait
 pub trait ParseFunction {
     fn parse(&self, data: &str) -> Option<Ast>;
 }
 impl ParseFunction for ParseFuncSig {
     fn parse(&self, data: &str) -> Option<Ast> {
-        self(data.as_ptr(), data.len())
-            .try_into()
-            .map_err(|e| log::error!("{e:?}"))
-            .ok()
+        todo!()
+
+        // self(data.as_ptr(), data.len())
+        //     .try_into()
+        //     .map_err(|e| log::error!("{e:?}"))
+        //     .ok()
     }
 }
 
-use libshards_core::ParseError;
-pub use libshards_core::{
-    ShardsAst, ShardsIdentifier, ShardsOperation, ShardsToken, ShardsType, ShardsValue,
+// use libshards_sys::ParseError;
+pub use libshards_sys::{
+    ShardsAst,
+    // ShardsIdentifier, ShardsOperation, ShardsToken, ShardsType, ShardsValue,
 };
 
 // TODO: find all these missing impls
@@ -54,7 +57,7 @@ pub struct Ast {
     pub tokens: Vec<Token>,
 }
 
-impl From<Ast> for libshards_core::ShardsAst {
+impl From<Ast> for libshards_sys::ShardsAst {
     /// Turns a valid ast into a an ast that can pass properly pass through
     /// library boundieres.
     ///
@@ -62,19 +65,21 @@ impl From<Ast> for libshards_core::ShardsAst {
     /// Leaks the tokens of this ast. The person who recives the ast after this
     /// is responsible for freeing the memory.
     fn from(value: Ast) -> Self {
-        let data = value
-            .tokens
-            .iter()
-            .cloned()
-            .map(Into::<libshards_core::ShardsToken>::into)
-            .collect::<Vec<libshards_core::ShardsToken>>()
-            .leak();
+        todo!();
 
-        libshards_core::ShardsAst {
-            is_valid: true,
-            tokens_count: data.len(),
-            tokens_pointer: data.as_mut_ptr(),
-        }
+        // let data = value
+        //     .tokens
+        //     .iter()
+        //     .cloned()
+        //     .map(Into::<libshards_sys::ShardsToken>::into)
+        //     .collect::<Vec<libshards_sys::ShardsToken>>()
+        //     .leak();
+        //
+        // libshards_core::ShardsAst {
+        //     is_valid: true,
+        //     tokens_count: data.len(),
+        //     tokens_pointer: data.as_mut_ptr(),
+        // }
     }
 }
 
@@ -93,14 +98,14 @@ pub enum Token {
     Operation(Operation),
 }
 
-impl From<Token> for ShardsToken {
-    fn from(value: Token) -> Self {
-        match value {
-            Token::Identifier(ident) => Self::Identifier(ident.into()),
-            Token::Operation(op) => Self::Operation(op.into()),
-        }
-    }
-}
+// impl From<Token> for ShardsToken {
+//     fn from(value: Token) -> Self {
+//         match value {
+//             Token::Identifier(ident) => Self::Identifier(ident.into()),
+//             Token::Operation(op) => Self::Operation(op.into()),
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone)]
 pub enum Identifier {
@@ -108,14 +113,14 @@ pub enum Identifier {
     Literal { value: Value },
 }
 
-impl From<Identifier> for ShardsIdentifier {
-    fn from(value: Identifier) -> Self {
-        match value {
-            Identifier::Variable { name } => ShardsIdentifier::Variable { name: name.into() },
-            Identifier::Literal { value } => ShardsIdentifier::Literal { val: value.into() },
-        }
-    }
-}
+// impl From<Identifier> for ShardsIdentifier {
+//     fn from(value: Identifier) -> Self {
+//         match value {
+//             Identifier::Variable { name } => ShardsIdentifier::Variable { name: name.into() },
+//             Identifier::Literal { value } => ShardsIdentifier::Literal { val: value.into() },
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone)]
 pub enum Operation {
@@ -128,16 +133,16 @@ pub enum Operation {
     Multiply,
 }
 
-impl From<Operation> for ShardsOperation {
-    fn from(value: Operation) -> Self {
-        match value {
-            Operation::ScriptCall { name } => Self::ScriptCall(name.into()),
-            Operation::Add => Self::Add,
-            Operation::Subtract => Self::Subtract,
-            Operation::Multiply => Self::Multiply,
-        }
-    }
-}
+// impl From<Operation> for ShardsOperation {
+//     fn from(value: Operation) -> Self {
+//         match value {
+//             Operation::ScriptCall { name } => Self::ScriptCall(name.into()),
+//             Operation::Add => Self::Add,
+//             Operation::Subtract => Self::Subtract,
+//             Operation::Multiply => Self::Multiply,
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -151,108 +156,108 @@ pub enum Value {
     // Array(Type),
 }
 
-impl From<Value> for ShardsValue {
-    fn from(value: Value) -> Self {
-        match value {
-            Value::Untyped(data) => ShardsValue {
-                variable_type: libshards_core::ShardsType::Untyped,
-                data,
-            },
-            Value::U32(_) => todo!(),
-            Value::U64(_) => todo!(),
-            Value::I32(_) => todo!(),
-            Value::I64(_) => todo!(),
-        }
-    }
-}
+// impl From<Value> for ShardsValue {
+//     fn from(value: Value) -> Self {
+//         match value {
+//             Value::Untyped(data) => ShardsValue {
+//                 variable_type: libshards_core::ShardsType::Untyped,
+//                 data,
+//             },
+//             Value::U32(_) => todo!(),
+//             Value::U64(_) => todo!(),
+//             Value::I32(_) => todo!(),
+//             Value::I64(_) => todo!(),
+//         }
+//     }
+// }
 
-impl TryFrom<ShardsAst> for Ast {
-    type Error = ParseError;
+// impl TryFrom<ShardsAst> for Ast {
+//     type Error = ParseError;
+//
+//     fn try_from(value: ShardsAst) -> Result<Self, Self::Error> {
+//         if !value.is_valid {
+//             return Err(ParseError::NotValid);
+//         }
+//
+//         let shards_tokens = unsafe {
+//             Vec::from_raw_parts(value.tokens_pointer, value.tokens_count, value.tokens_count)
+//         };
+//
+//         let in_len = shards_tokens.len();
+//
+//         let tokens: Vec<Token> = shards_tokens
+//             .into_iter()
+//             .flat_map(|shard| shard.try_into())
+//             .collect();
+//
+//         let out_len = tokens.len();
+//
+//         if in_len > out_len {
+//             Err(ParseError::BadTokens)
+//         } else {
+//             Ok(Ast { tokens })
+//         }
+//     }
+// }
 
-    fn try_from(value: ShardsAst) -> Result<Self, Self::Error> {
-        if !value.is_valid {
-            return Err(ParseError::NotValid);
-        }
+// impl TryFrom<ShardsToken> for Token {
+//     type Error = String;
+//
+//     fn try_from(value: ShardsToken) -> Result<Self, Self::Error> {
+//         match value {
+//             ShardsToken::Identifier(ident) => match ident.try_into() {
+//                 Ok(ident) => Ok(Token::Identifier(ident)),
+//                 Err(e) => Err(e),
+//             },
+//             ShardsToken::Operation(op) => match op.try_into() {
+//                 Ok(op) => Ok(Token::Operation(op)),
+//                 Err(e) => Err(e),
+//             },
+//         }
+//     }
+// }
 
-        let shards_tokens = unsafe {
-            Vec::from_raw_parts(value.tokens_pointer, value.tokens_count, value.tokens_count)
-        };
+// impl TryFrom<ShardsIdentifier> for Identifier {
+//     type Error = String;
+//
+//     fn try_from(value: ShardsIdentifier) -> Result<Self, Self::Error> {
+//         match value {
+//             ShardsIdentifier::Variable { name } => {
+//                 let name = name.try_into().unwrap();
+//                 Ok(Self::Variable { name })
+//             }
+//             ShardsIdentifier::Literal { val } => {
+//                 val.try_into().map(|value| Self::Literal { value })
+//             }
+//         }
+//     }
+// }
 
-        let in_len = shards_tokens.len();
+// impl TryFrom<ShardsOperation> for Operation {
+//     type Error = String;
+//
+//     fn try_from(value: ShardsOperation) -> Result<Self, Self::Error> {
+//         match value {
+//             ShardsOperation::ScriptCall(s) => {
+//                 // TODO: check validity of passed values
+//                 let name = String::try_from(s).unwrap();
+//                 Ok(Self::ScriptCall { name })
+//             }
+//             _ => todo!(),
+//         }
+//     }
+// }
 
-        let tokens: Vec<Token> = shards_tokens
-            .into_iter()
-            .flat_map(|shard| shard.try_into())
-            .collect();
-
-        let out_len = tokens.len();
-
-        if in_len > out_len {
-            Err(ParseError::BadTokens)
-        } else {
-            Ok(Ast { tokens })
-        }
-    }
-}
-
-impl TryFrom<ShardsToken> for Token {
-    type Error = String;
-
-    fn try_from(value: ShardsToken) -> Result<Self, Self::Error> {
-        match value {
-            ShardsToken::Identifier(ident) => match ident.try_into() {
-                Ok(ident) => Ok(Token::Identifier(ident)),
-                Err(e) => Err(e),
-            },
-            ShardsToken::Operation(op) => match op.try_into() {
-                Ok(op) => Ok(Token::Operation(op)),
-                Err(e) => Err(e),
-            },
-        }
-    }
-}
-
-impl TryFrom<ShardsIdentifier> for Identifier {
-    type Error = String;
-
-    fn try_from(value: ShardsIdentifier) -> Result<Self, Self::Error> {
-        match value {
-            ShardsIdentifier::Variable { name } => {
-                let name = name.try_into().unwrap();
-                Ok(Self::Variable { name })
-            }
-            ShardsIdentifier::Literal { val } => {
-                val.try_into().map(|value| Self::Literal { value })
-            }
-        }
-    }
-}
-
-impl TryFrom<ShardsOperation> for Operation {
-    type Error = String;
-
-    fn try_from(value: ShardsOperation) -> Result<Self, Self::Error> {
-        match value {
-            ShardsOperation::ScriptCall(s) => {
-                // TODO: check validity of passed values
-                let name = String::try_from(s).unwrap();
-                Ok(Self::ScriptCall { name })
-            }
-            _ => todo!(),
-        }
-    }
-}
-
-impl TryFrom<ShardsValue> for Value {
-    type Error = String;
-
-    fn try_from(value: ShardsValue) -> Result<Self, Self::Error> {
-        match value.variable_type {
-            ShardsType::Untyped => Ok(Value::Untyped(value.data)),
-            ShardsType::U32 => todo!(),
-            ShardsType::U64 => todo!(),
-            ShardsType::I32 => todo!(),
-            ShardsType::I64 => todo!(),
-        }
-    }
-}
+// impl TryFrom<ShardsValue> for Value {
+//     type Error = String;
+//
+//     fn try_from(value: ShardsValue) -> Result<Self, Self::Error> {
+//         match value.variable_type {
+//             ShardsType::Untyped => Ok(Value::Untyped(value.data)),
+//             ShardsType::U32 => todo!(),
+//             ShardsType::U64 => todo!(),
+//             ShardsType::I32 => todo!(),
+//             ShardsType::I64 => todo!(),
+//         }
+//     }
+// }
