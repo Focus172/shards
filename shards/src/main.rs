@@ -65,11 +65,11 @@ fn main() -> std::process::ExitCode {
 }
 
 fn logger(path: Option<PathBuf>) -> io::Result<()> {
-    let _ = simplelog::WriteLogger::init(
-        simplelog::LevelFilter::Info,
-        simplelog::Config::default(),
-        File::create(path.clone().unwrap_or_else(|| PathBuf::from("rushi.log")))?,
-    );
+    // let _ = simplelog::WriteLogger::init(
+    //     simplelog::LevelFilter::Info,
+    //     simplelog::Config::default(),
+    //     File::create(path.clone().unwrap_or_else(|| PathBuf::from("rushi.log")))?,
+    // );
 
     log::info!("Debug mode enabled");
 

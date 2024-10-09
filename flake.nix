@@ -1,35 +1,46 @@
 {
-  inputs = {
-    utils.url = github:numtide/flake-utils;
-    nixpkgs.url = github:NixOS/nixpkgs/nixos-23.11;
-  };
+  inputs.nixpkgs.url = "nixpkgs";
 
   outputs = {
     self,
     nixpkgs,
-    utils,
-  }:
-    utils.lib.eachDefaultSystem (system: let
+  }: let
+    lib = nixpkgs.lib;
+    systems = [ "aarch64-linux" "x86_64-linux" ];
+    eachSystem = f:
+      lib.foldAttrs lib.mergeAttrs { }
+      (map (s: lib.mapAttrs (_: v: { ${s} = v; }) (f s)) systems);
+  in
+    eachSystem (system: let
       pkgs = import nixpkgs {
         inherit system;
       };
-      zig-builder = "${pkgs.zig}/bin/zig build --prefix $out --cache-dir /build/zig-cache --global-cache-dir /build/global-cache";
-      enable-demo = false;
+      buildInputs = [];
+      pname = "shards";
     in {
-      packages.default = pkgs.stdenv.mkDerivation {
-        pname = "treet";
+      packages.default = pkgs.rustPlatform.buildRustPackage {
+        inherit pname;
         version = "0.0.1";
+
+        cargoLock = {
+          lockFile = ./Cargo.lock;
+          outputHashes = {
+            # "ext-0.1.0" = "sha256-50llOwQPEBNmEkDV6quVyNOkZFa78IV0a+eoxHqvVPA=";
+          };
+        };
+
         src = ./.;
 
-        buildInputs = [pkgs.tree-sitter];
+        nativeBuildInputs = with pkgs; [ pkg-config rustup ];
+        inherit buildInputs;
 
-        buildPhase =
-          zig-builder
-          + (
-            if enable-demo
-            then "-Ddemo=true"
-            else ""
-          );
+        installPhase = let
+          target = "target/${pkgs.stdenv.targetPlatform.config}/release";
+        in ''
+          install -Dm755 ${target}/${pname} $out/bin/${pname}
+        '';
+
+        LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
 
         meta = {
           maintainers = ["Evan Stokdyk <evan.stokdyk@gmail.com>"];

@@ -16,7 +16,7 @@
     dead_code,
     unused_crate_dependencies
 )]
-#![feature(vec_into_raw_parts)]
+// #![feature(vec_into_raw_parts)]
 
 pub type ParseFuncSig = fn(*const u8, usize) -> libshards_sys::ShardsAst;
 /// Marker Trait
